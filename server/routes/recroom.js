@@ -4,9 +4,8 @@ import { callService } from './homeassistant.js';
 
 const router = Router();
 
-const BROADLINK_ENTITY = config.entities.broadlink;          // remote.base_station
-const GOOGLE_TV_REMOTE_ENTITY = config.entities.googleTvRemote;       // remote.rec_room_google_tv
-const GOOGLE_TV_MEDIA_ENTITY = config.entities.googleTvMediaPlayer;   // media_player.rec_room_google_tv_3
+const BROADLINK_ENTITY = config.entities.broadlink;             // remote.base_station
+const GOOGLE_TV_REMOTE_ENTITY = config.entities.googleTvRemote;  // remote.rec_room_google_tv
 
 // ── SAMSUNG TV (Broadlink IR via HA) ────────────────────────────────────────
 // body: { command: 'power' | 'volume_up' | 'volume_down' | 'channel_up' | 'channel_down' | 'mute' }
@@ -41,16 +40,17 @@ router.post('/googletv/nav', async (req, res) => {
 });
 
 // ── GOOGLE TV APP LAUNCH ─────────────────────────────────────────────────────
-// Now routed through HA's androidtv.adb_command service instead of a direct
-// ADB call from this server — the cloud server has no network path to the
-// device, but HA (local, reachable via Nabu Casa) does.
+// This device uses HA's official "Android TV Remote" integration, not the
+// older ADB-based one — there's no adb_command service. Instead, remote.turn_on
+// accepts an `activity` field targeting the remote entity (same one nav uses),
+// and it takes the same package/activity format already used for these apps.
 // body: { activity: 'com.netflix.ninja/.MainActivity' }
 router.post('/googletv/launch', async (req, res) => {
   try {
     const { activity } = req.body;
-    await callService('androidtv', 'adb_command', {
-      entity_id: GOOGLE_TV_MEDIA_ENTITY,
-      command: `am start -n ${activity}`,
+    await callService('remote', 'turn_on', {
+      entity_id: GOOGLE_TV_REMOTE_ENTITY,
+      activity,
     });
     res.json({ ok: true, activity });
   } catch (err) {
