@@ -2,19 +2,21 @@ import { useState, useEffect } from 'react';
 import api from '../api.js';
 import styles from './RecRoom.module.css';
 
+// Since HA 2024.6, the Android TV Remote integration launches apps from the
+// bare package name (application ID) — no activity suffix, no market:// prefix.
 const STREAMING_APPS = [
-  { name: 'Netflix', activity: 'com.netflix.ninja/.MainActivity' },
-  { name: 'YouTube', activity: 'com.google.android.youtube.tv/.MainActivity' },
-  { name: 'Disney+', activity: 'com.disney.disneyplus/.MainActivity' },
-  { name: 'Max', activity: 'com.wbd.stream/com.wbd.beam.BeamActivity' },
-  { name: 'Hulu', activity: 'com.hulu.livingroomplus/.MainActivity' },
-  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom/com.amazon.ignition.IgnitionActivity' },
-  { name: 'Plex', activity: 'com.plexapp.android/.MainActivity' },
-  { name: 'Spotify', activity: 'com.spotify.tv.android/.MainActivity' },
-  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv/.MainActivity' },
-  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid/.MainActivity' },
-  { name: 'Paramount+', activity: 'com.cbs.ott/.MainActivity' },
-  { name: 'ESPN', activity: 'com.espn.score_and_schedule/.MainActivity' },
+  { name: 'Netflix', activity: 'com.netflix.ninja' },
+  { name: 'YouTube', activity: 'com.google.android.youtube.tv' },
+  { name: 'Disney+', activity: 'com.disney.disneyplus' },
+  { name: 'Max', activity: 'com.wbd.stream' },
+  { name: 'Hulu', activity: 'com.hulu.livingroomplus' },
+  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom' },
+  { name: 'Plex', activity: 'com.plexapp.android' },
+  { name: 'Spotify', activity: 'com.spotify.tv.android' },
+  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv' },
+  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid' },
+  { name: 'Paramount+', activity: 'com.cbs.ott' },
+  { name: 'ESPN', activity: 'com.espn.score_and_schedule' },
 ];
 
 const SAMSUNG_COMMANDS = [
