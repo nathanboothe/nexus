@@ -1,0 +1,73 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.error {
+  background: #4a1a1a;
+  color: #ffb3b3;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.loading {
+  color: #999;
+  font-size: 13px;
+}
+
+.section {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #ccc;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardName {
+  font-size: 13px;
+  color: #eee;
+}
+
+.cardControls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  flex: 1;
+  background: #3a3a3a;
+  color: #fff;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn:active {
+  background: #4a4a4a;
+}

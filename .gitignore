@@ -1,0 +1,21 @@
+# Secrets — never commit real config
+server/config.js
+
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+
+# Logs
+logs/
+*.log
+
+# Uploads
+uploads/
+
+# OS junk
+.DS_Store
+Thumbs.db
