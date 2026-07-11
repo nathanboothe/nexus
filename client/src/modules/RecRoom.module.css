@@ -1,83 +1,180 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 16px;
-  max-width: 480px;
+  gap: 28px;
+  padding: 20px 16px 40px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
 .flash {
   position: fixed;
-  top: 12px;
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  background: #222;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
+  background: #2a2117;
+  border: 1px solid #4a3a24;
+  color: #f2e6d0;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
   z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .section {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 16px;
+  background: #16140f;
+  border: 1px solid #2a2620;
+  border-radius: 16px;
+  padding: 20px;
 }
 
-.section h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: #ccc;
-}
-
-.section h3 {
-  margin: 16px 0 8px;
+.sectionTitle {
+  margin: 0 0 16px;
   font-size: 13px;
-  color: #999;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c99a4a;
+}
+
+.subheading {
+  margin: 22px 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #6b6558;
+}
+
+/* Amber-on-black "receiver display" readout, monospace like real AV gear */
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  background: #0b0a08;
+  border: 1px solid #2a2620;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: #e3a857;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.dpad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  max-width: 220px;
+  gap: 10px;
 }
 
 .btn {
-  background: #2a2a2a;
-  color: #fff;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
-  padding: 12px 8px;
-  font-size: 13px;
+  background: #221f19;
+  color: #f0ece2;
+  border: 1px solid #3a352a;
+  border-radius: 10px;
+  padding: 14px 8px;
+  font-size: 14px;
+  min-height: 48px;
   cursor: pointer;
+  transition: background 0.1s ease;
 }
 
 .btn:active {
-  background: #3a3a3a;
-}
-
-.status {
-  font-size: 13px;
-  color: #999;
-  margin-bottom: 12px;
+  background: #332c1f;
 }
 
 .sliderRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.sliderRow label {
+  font-size: 12px;
+  color: #8a8378;
+  min-width: 46px;
 }
 
 .sliderRow input[type='range'] {
   flex: 1;
+  accent-color: #c99a4a;
+}
+
+/* Real cross-shaped D-pad instead of a boxy grid */
+.dpad {
+  display: grid;
+  grid-template-columns: 64px 64px 64px;
+  grid-template-rows: 56px 56px 56px;
+  grid-template-areas:
+    '.    up    .'
+    'left center right'
+    '.    down  .';
+  gap: 8px;
+  justify-content: center;
+  margin: 4px 0 14px;
+}
+
+.dpadBtn {
+  background: #221f19;
+  border: 1px solid #3a352a;
+  border-radius: 12px;
+  color: #f0ece2;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.dpadBtn:active {
+  background: #332c1f;
+}
+
+.dpadUp { grid-area: up; }
+.dpadLeft { grid-area: left; }
+.dpadCenter {
+  grid-area: center;
+  background: #2e2318;
+  border-color: #c99a4a;
+  color: #e3a857;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+}
+.dpadRight { grid-area: right; }
+.dpadDown { grid-area: down; }
+
+.dpadRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.dpadRow .btn {
+  flex: 1;
+  max-width: 140px;
+}
+
+.appGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.appBtn {
+  background: #1c1a15;
+  color: #d8d2c4;
+  border: 1px solid #322d24;
+  border-radius: 10px;
+  padding: 14px 10px;
+  font-size: 14px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.appBtn:active {
+  background: #2a251c;
+  border-color: #c99a4a;
 }

@@ -31,16 +31,6 @@ const SAMSUNG_COMMANDS = [
   { label: 'Ch -', command: 'channel_down' },
 ];
 
-const NAV_COMMANDS = [
-  { label: '▲', command: 'DPAD_UP' },
-  { label: '◀', command: 'DPAD_LEFT' },
-  { label: 'OK', command: 'DPAD_CENTER' },
-  { label: '▶', command: 'DPAD_RIGHT' },
-  { label: '▼', command: 'DPAD_DOWN' },
-  { label: 'Back', command: 'BACK' },
-  { label: 'Home', command: 'HOME' },
-];
-
 export default function RecRoom() {
   const [flashMsg, setFlashMsg] = useState('');
   const [denonStatus, setDenonStatus] = useState(null);
@@ -123,7 +113,7 @@ export default function RecRoom() {
       {flashMsg && <div className={styles.flash}>{flashMsg}</div>}
 
       <section className={styles.section}>
-        <h2>Samsung TV</h2>
+        <h2 className={styles.sectionTitle}>Samsung TV</h2>
         <div className={styles.grid}>
           {SAMSUNG_COMMANDS.map((c) => (
             <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
@@ -134,11 +124,13 @@ export default function RecRoom() {
       </section>
 
       <section className={styles.section}>
-        <h2>Denon AVR</h2>
+        <h2 className={styles.sectionTitle}>Denon AVR</h2>
         {denonStatus && (
-          <div className={styles.status}>
-            Power: {denonStatus.power ?? '—'} · Input: {denonStatus.input ?? '—'} · Vol:{' '}
-            {denonStatus.volume ?? '—'} · Mute: {denonStatus.mute ?? '—'}
+          <div className={styles.readout}>
+            <span>{denonStatus.power === 'on' ? 'ON' : 'STANDBY'}</span>
+            <span>{denonStatus.input ?? '—'}</span>
+            <span>VOL {denonStatus.volume ?? '—'}</span>
+            <span>{denonStatus.mute ? 'MUTED' : ''}</span>
           </div>
         )}
         <div className={styles.grid}>
@@ -162,18 +154,22 @@ export default function RecRoom() {
       </section>
 
       <section className={styles.section}>
-        <h2>Google TV</h2>
+        <h2 className={styles.sectionTitle}>Google TV</h2>
         <div className={styles.dpad}>
-          {NAV_COMMANDS.map((c) => (
-            <button key={c.command} className={styles.btn} onClick={() => googleTvNav(c.command)}>
-              {c.label}
-            </button>
-          ))}
+          <button className={`${styles.dpadBtn} ${styles.dpadUp}`} onClick={() => googleTvNav('DPAD_UP')}>▲</button>
+          <button className={`${styles.dpadBtn} ${styles.dpadLeft}`} onClick={() => googleTvNav('DPAD_LEFT')}>◀</button>
+          <button className={`${styles.dpadBtn} ${styles.dpadCenter}`} onClick={() => googleTvNav('DPAD_CENTER')}>OK</button>
+          <button className={`${styles.dpadBtn} ${styles.dpadRight}`} onClick={() => googleTvNav('DPAD_RIGHT')}>▶</button>
+          <button className={`${styles.dpadBtn} ${styles.dpadDown}`} onClick={() => googleTvNav('DPAD_DOWN')}>▼</button>
         </div>
-        <h3>Streaming Apps</h3>
-        <div className={styles.grid}>
+        <div className={styles.dpadRow}>
+          <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
+          <button className={styles.btn} onClick={() => googleTvNav('HOME')}>Home</button>
+        </div>
+        <h3 className={styles.subheading}>Streaming Apps</h3>
+        <div className={styles.appGrid}>
           {STREAMING_APPS.map((app) => (
-            <button key={app.name} className={styles.btn} onClick={() => launchApp(app)}>
+            <button key={app.name} className={styles.appBtn} onClick={() => launchApp(app)}>
               {app.name}
             </button>
           ))}
