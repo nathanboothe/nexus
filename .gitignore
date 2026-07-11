@@ -1,5 +1,4 @@
 # Secrets — never commit real config
-server/config.js
 
 # Dependencies
 node_modules/
