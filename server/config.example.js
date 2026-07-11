@@ -1,36 +1,34 @@
 // Nexus server configuration
 // Fill in real values below. This file is gitignored — never commit it.
+// On Render, set these as environment variables instead (see README) and
+// this file just reads from process.env with these as local-dev fallbacks.
 
 export default {
-  port: 8080,
+  port: process.env.PORT || 8080,
 
   homeAssistant: {
-    url: 'http://192.168.230.81:8123',
-    // Long-lived access token from HA: Profile -> Security -> Long-Lived Access Tokens
-    token: 'PASTE_YOUR_HA_LONG_LIVED_TOKEN_HERE',
+    // Nabu Casa remote URL — works identically to the local URL, same token,
+    // just drop the port. Everything now routes through HA since it's the
+    // only thing with a stable, reachable-from-anywhere address.
+    url: process.env.HA_URL || 'https://PASTE_YOUR_SUBDOMAIN.ui.nabu.casa',
+    token: process.env.HA_TOKEN || 'PASTE_YOUR_HA_LONG_LIVED_TOKEN_HERE',
   },
 
-  denon: {
-    enabled: true,
-    ip: '192.168.230.29',
-    port: 11080, // plain HTTP, no auth, port 80 redirects to HTTPS — use 11080 directly
-  },
-
-  broadlink: {
-    // Samsung TV is controlled via Broadlink IR through Home Assistant, not directly
-    haEntity: 'remote.base_station',
-  },
-
-  googleTv: {
-    // Navigation (D-pad, home, back) goes through HA's Android TV integration —
-    // ADB keyevents do NOT work for nav on this device, only app launching does.
-    haEntity: 'remote.rec_room_google_tv',
-    adbHost: '192.168.230.174:5555',
-    adbPath: 'C:\\tools\\platform-tools\\adb.exe',
+  entities: {
+    // Samsung TV via Broadlink IR
+    broadlink: 'remote.base_station',
+    // Denon AVR — already a known HA entity, NOT home_theater (HEOS) or
+    // home_theater_3 (Music Assistant)
+    denon: 'media_player.home_theater_2',
+    // Google TV — remote entity for D-pad/nav
+    googleTvRemote: 'remote.rec_room_google_tv',
+    // Google TV — media_player entity for the Android TV integration,
+    // used as the target for adb_command (app launching)
+    googleTvMediaPlayer: 'media_player.rec_room_google_tv_3',
   },
 
   govee: {
-    apiKey: 'PASTE_YOUR_GOVEE_API_KEY_HERE',
+    apiKey: process.env.GOVEE_API_KEY || 'PASTE_YOUR_GOVEE_API_KEY_HERE',
     // Govee cloud API caps at 10,000 requests/day — keep this long
     pollIntervalMs: 300000,
   },

@@ -1,16 +1,12 @@
 import { Router } from 'express';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import config from '../config.js';
 import { callService } from './homeassistant.js';
 
-const execAsync = promisify(exec);
 const router = Router();
 
-const ADB = config.googleTv.adbPath;
-const GOOGLE_TV_HOST = config.googleTv.adbHost;
-const BROADLINK_ENTITY = config.broadlink.haEntity; // remote.base_station
-const GOOGLE_TV_HA_ENTITY = config.googleTv.haEntity; // remote.rec_room_google_tv
+const BROADLINK_ENTITY = config.entities.broadlink;          // remote.base_station
+const GOOGLE_TV_REMOTE_ENTITY = config.entities.googleTvRemote;       // remote.rec_room_google_tv
+const GOOGLE_TV_MEDIA_ENTITY = config.entities.googleTvMediaPlayer;   // media_player.rec_room_google_tv_3
 
 // ── SAMSUNG TV (Broadlink IR via HA) ────────────────────────────────────────
 // body: { command: 'power' | 'volume_up' | 'volume_down' | 'channel_up' | 'channel_down' | 'mute' }
@@ -35,7 +31,7 @@ router.post('/googletv/nav', async (req, res) => {
   try {
     const { command } = req.body;
     await callService('remote', 'send_command', {
-      entity_id: GOOGLE_TV_HA_ENTITY,
+      entity_id: GOOGLE_TV_REMOTE_ENTITY,
       command,
     });
     res.json({ ok: true });
@@ -44,12 +40,18 @@ router.post('/googletv/nav', async (req, res) => {
   }
 });
 
-// ── GOOGLE TV APP LAUNCH (direct ADB) ───────────────────────────────────────
+// ── GOOGLE TV APP LAUNCH ─────────────────────────────────────────────────────
+// Now routed through HA's androidtv.adb_command service instead of a direct
+// ADB call from this server — the cloud server has no network path to the
+// device, but HA (local, reachable via Nabu Casa) does.
 // body: { activity: 'com.netflix.ninja/.MainActivity' }
 router.post('/googletv/launch', async (req, res) => {
   try {
     const { activity } = req.body;
-    await execAsync(`"${ADB}" -s ${GOOGLE_TV_HOST} shell am start -n ${activity}`);
+    await callService('androidtv', 'adb_command', {
+      entity_id: GOOGLE_TV_MEDIA_ENTITY,
+      command: `am start -n ${activity}`,
+    });
     res.json({ ok: true, activity });
   } catch (err) {
     res.status(500).json({ error: err.message });
