@@ -4,19 +4,22 @@ import styles from './RecRoom.module.css';
 
 // Since HA 2024.6, the Android TV Remote integration launches apps from the
 // bare package name (application ID) — no activity suffix, no market:// prefix.
+// Since HA 2024.6, most apps launch from the bare package name. A few devices
+// still resolve certain packages to the Play Store on cold launch instead of
+// opening the app directly — for those, the older market://launch?id= form
+// works instead. Confirmed via current_activity on this device: Max, Prime,
+// and Apple TV all needed the market:// form; the rest work bare.
+// Netflix is a known unsupported case for this HA integration (per HA's own
+// docs) — commands don't reach it even from Google's first-party apps.
 const STREAMING_APPS = [
-  { name: 'Netflix', activity: 'com.netflix.ninja' },
   { name: 'YouTube', activity: 'com.google.android.youtube.tv' },
   { name: 'Disney+', activity: 'com.disney.disneyplus' },
-  { name: 'Max', activity: 'com.wbd.stream' },
+  { name: 'Max', activity: 'market://launch?id=com.wbd.stream' },
   { name: 'Hulu', activity: 'com.hulu.livingroomplus' },
-  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom' },
-  { name: 'Plex', activity: 'com.plexapp.android' },
-  { name: 'Spotify', activity: 'com.spotify.tv.android' },
-  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv' },
+  { name: 'Prime', activity: 'market://launch?id=com.amazon.amazonvideo.livingroom' },
+  { name: 'Apple TV', activity: 'market://launch?id=com.apple.atve.androidtv.appletv' },
   { name: 'Peacock', activity: 'com.peacocktv.peacockandroid' },
   { name: 'Paramount+', activity: 'com.cbs.ott' },
-  { name: 'ESPN', activity: 'com.espn.score_and_schedule' },
 ];
 
 const SAMSUNG_COMMANDS = [
