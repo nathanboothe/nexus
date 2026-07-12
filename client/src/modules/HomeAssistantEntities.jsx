@@ -23,15 +23,21 @@ const EXCLUDE_EXACT_NAMES = new Set([
   'Home Theater',
   'XBOX Series X',
   'Remote UI',
+  'Samsung 85" TV',
+  'SamsungTV Smart Update',
 ]);
 
 // Prefix exclusions
 const EXCLUDE_PREFIXES = ['Lucas iPhone', 'SM-F766U1', 'Sun'];
 
+// Substring exclusions (case-insensitive)
+const EXCLUDE_SUBSTRINGS = ['airquality', 'gearmode', 'google tv'];
+
 function isNoiseEntity(entity) {
   const id = entity.entity_id;
   const domain = domainOf(id);
   const name = nameOf(entity);
+  const nameLower = name.toLowerCase();
 
   if (entity.state === 'unavailable' || entity.state === 'unknown') return true;
   if (domain === 'light') return true;
@@ -44,6 +50,7 @@ function isNoiseEntity(entity) {
 
   if (EXCLUDE_EXACT_NAMES.has(name)) return true;
   if (EXCLUDE_PREFIXES.some((p) => name.startsWith(p))) return true;
+  if (EXCLUDE_SUBSTRINGS.some((s) => nameLower.includes(s))) return true;
 
   return false;
 }
@@ -72,6 +79,48 @@ function displayName(entity) {
   const name = nameOf(entity);
   if (name === 'Hallway') return 'Thermostat';
   return name;
+}
+
+// Matches "<Base> Air Monitor Temperature" / "<Base> Air Monitor Humidity" —
+// deliberately does NOT match "thermometer" entities, which stay separate and
+// fully detailed per instruction.
+const AIR_MONITOR_PATTERN = /^(.*?)\s+air\s*monitor\s+(temperature|humidity)$/i;
+
+// Combines each room's Air Monitor Temperature/Humidity pair into a single
+// synthetic card. Entities that don't match pass through untouched.
+function combineAirMonitors(entityList) {
+  const groups = {};
+  const passthrough = [];
+
+  for (const e of entityList) {
+    const match = nameOf(e).match(AIR_MONITOR_PATTERN);
+    if (!match) {
+      passthrough.push(e);
+      continue;
+    }
+    const base = match[1].trim();
+    const kind = match[2].toLowerCase();
+    groups[base] = groups[base] || {};
+    groups[base][kind] = e;
+  }
+
+  const combined = Object.entries(groups).map(([base, parts]) => {
+    const unit = (e) => e?.attributes?.unit_of_measurement || '';
+    const pieces = [];
+    if (parts.temperature) pieces.push(`${parts.temperature.state}${unit(parts.temperature)}`);
+    if (parts.humidity) pieces.push(`${parts.humidity.state}${unit(parts.humidity)}`);
+    // Use whichever source entity exists for id/attribute plumbing
+    const source = parts.temperature || parts.humidity;
+    return {
+      entity_id: `synthetic.air_monitor_${base.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+      state: pieces.join(' · '),
+      attributes: { friendly_name: `${base} Air Monitor` },
+      _readonly: true,
+      _sourceEntityId: source.entity_id,
+    };
+  });
+
+  return [...passthrough, ...combined];
 }
 
 export default function HomeAssistantEntities() {
@@ -105,7 +154,7 @@ export default function HomeAssistantEntities() {
     }
   }
 
-  const byRoom = entities.filter((e) => !isNoiseEntity(e)).reduce((acc, e) => {
+  const byRoom = combineAirMonitors(entities.filter((e) => !isNoiseEntity(e))).reduce((acc, e) => {
     const r = roomOf(e);
     acc[r] = acc[r] || [];
     acc[r].push(e);
