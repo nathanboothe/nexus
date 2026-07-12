@@ -49,4 +49,27 @@ router.get('/state/:entityId', async (req, res) => {
   }
 });
 
+// ── ALL STATES ── returns every entity in HA — client groups by domain
+router.get('/states', async (_req, res) => {
+  try {
+    const states = await haCall('/api/states');
+    res.json(states);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GENERIC SERVICE CALL ── body: { domain, service, data }
+// Lets the client control any entity type (lights, switches, locks, climate,
+// covers, etc.) without a bespoke route for each one.
+router.post('/service', async (req, res) => {
+  try {
+    const { domain, service, data } = req.body;
+    await callService(domain, service, data);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

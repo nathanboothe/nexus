@@ -1,84 +1,28 @@
-.page {
+.subNav {
   display: flex;
-  flex-direction: column;
-  gap: 28px;
-  padding: 20px 16px 40px;
+  gap: 8px;
+  padding: 16px 16px 0;
   max-width: 520px;
   margin: 0 auto;
 }
 
-.error {
-  background: #2a1616;
-  border: 1px solid #4a2424;
-  color: #f0b3b3;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.loading {
-  color: #8a8378;
-  font-size: 13px;
-}
-
-.section {
-  background: #16140f;
-  border: 1px solid #2a2620;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-.sectionTitle {
-  margin: 0 0 16px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #c99a4a;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.card {
-  background: #1c1a15;
-  border: 1px solid #322d24;
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.cardName {
-  font-size: 13px;
-  color: #f0ece2;
-}
-
-.cardControls {
-  display: flex;
-  gap: 8px;
-}
-
-.btn {
+.subNavBtn,
+.subNavActive {
   flex: 1;
-  background: #221f19;
-  color: #f0ece2;
-  border: 1px solid #3a352a;
+  padding: 10px;
   border-radius: 8px;
-  padding: 8px;
-  font-size: 12px;
-  min-height: 36px;
+  border: 1px solid #322d24;
+  font-size: 13px;
   cursor: pointer;
 }
 
-.btn:active {
-  background: #332c1f;
+.subNavBtn {
+  background: transparent;
+  color: #8a8378;
 }
 
-.card input[type='range'] {
-  accent-color: #c99a4a;
+.subNavActive {
+  background: #1c1a15;
+  color: #e3a857;
+  border-color: #c99a4a;
 }

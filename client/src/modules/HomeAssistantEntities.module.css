@@ -1,0 +1,123 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 16px 40px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.error {
+  background: #2a1616;
+  border: 1px solid #4a2424;
+  color: #f0b3b3;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.loading {
+  color: #8a8378;
+  font-size: 13px;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tab,
+.tabActive {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #322d24;
+  cursor: pointer;
+}
+
+.tab {
+  background: #1c1a15;
+  color: #8a8378;
+}
+
+.tabActive {
+  background: #2e2318;
+  color: #e3a857;
+  border-color: #c99a4a;
+}
+
+.tabCount {
+  color: #6b6558;
+  font-size: 11px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card {
+  background: #1c1a15;
+  border: 1px solid #322d24;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardName {
+  font-size: 13px;
+  color: #f0ece2;
+}
+
+.toggleOn,
+.toggleOff,
+.smallBtn {
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  min-height: 36px;
+  border: 1px solid #3a352a;
+  cursor: pointer;
+}
+
+.toggleOn {
+  background: #2e2318;
+  color: #e3a857;
+  border-color: #c99a4a;
+}
+
+.toggleOff {
+  background: #221f19;
+  color: #f0ece2;
+}
+
+.smallBtn {
+  background: #221f19;
+  color: #f0ece2;
+  flex: 1;
+}
+
+.coverBtns,
+.climateBtns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.climateTemp {
+  flex: 1;
+  text-align: center;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  color: #e3a857;
+  font-size: 14px;
+}
+
+.readout {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  color: #e3a857;
+  font-size: 13px;
+}
