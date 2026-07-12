@@ -11,6 +11,18 @@ const POLL_INTERVAL_MS = 300000;
 const ROOM_MAP = {
   'Spotlights Right': 'Front Yard',
   'Spotlights Left': 'Front Yard',
+  'Curtain Lights': 'Front Yard',
+  'Deck Lights': 'Deck',
+  'Deck Stairs': 'Deck',
+  'Front Porch Light 1': 'Front Porch',
+  'Front Porch Light 2': 'Front Porch',
+  'Grill Lights': 'Patio',
+  'Porch Light 1': 'Porch',
+  'Porch Light 2': 'Porch',
+  'Porch Light 4': 'Porch',
+  'Porch Light 5': 'Porch',
+  'Porch Light 7': 'Porch',
+  'Porch Light 8': 'Porch',
   'Back Fan Bulb 1': 'Rec Room',
   'Back Fan Bulb 2': 'Rec Room',
   'Back Fan Bulb 3': 'Rec Room',
@@ -28,10 +40,41 @@ const ROOM_MAP = {
   'PC Smart Plug': 'Rec Room',
   'Lucas Light': "Lucas's Room",
   'Dog Closet': 'Dog Closet',
+  'Flood Lights': 'Back Yard',
+  "Tyler's Air Purifier": "Tyler's Room",
 };
 
+// Govee exposes each LED segment of a strip/scene group as its own separate
+// "device" in the API. These are noise, not real controllable fixtures —
+// filtered out entirely rather than shown as Unassigned.
+const EXCLUDE_EXACT = new Set([
+  'Rec Room - All Rec Room Lights',
+  'Rec Room Default Lighting',
+  'Rec Room Floor Lamps',
+  'Rec Room Fridge Lights',
+  'Rec Room Lights',
+]);
+
+const EXCLUDE_PATTERNS = [
+  /^Deck Lights Segment \d+$/,
+  /^Deck Stairs Segment \d+$/,
+  /^Flood Lights Segment \d+$/,
+  /^Grill Lights Segment \d+$/,
+  /^Left Floor Lamp Segment \d+$/,
+  /^Right Floor Lamp Segment \d+$/,
+  /^Spot ?Lights Segment \d+$/,
+];
+
+function isExcluded(deviceName) {
+  if (EXCLUDE_EXACT.has(deviceName)) return true;
+  return EXCLUDE_PATTERNS.some((p) => p.test(deviceName));
+}
+
 // Preferred display order — rooms not listed here fall in after these, alphabetically
-const ROOM_ORDER = ['Rec Room', "Lucas's Room", 'Front Yard', 'Dog Closet'];
+const ROOM_ORDER = [
+  'Rec Room', "Lucas's Room", "Tyler's Room", 'Front Yard', 'Back Yard',
+  'Deck', 'Front Porch', 'Porch', 'Patio', 'Dog Closet',
+];
 
 export default function GoveeLights() {
   const [devices, setDevices] = useState([]);
@@ -92,7 +135,9 @@ export default function GoveeLights() {
     }
   }
 
-  const rooms = devices.reduce((acc, d) => {
+  const rooms = devices
+    .filter((d) => !isExcluded(d.deviceName))
+    .reduce((acc, d) => {
     const label = ROOM_MAP[d.deviceName] || 'Unassigned';
     acc[label] = acc[label] || [];
     acc[label].push(d);
