@@ -9,7 +9,7 @@ const TOGGLE_DOMAINS = new Set(['switch', 'fan', 'input_boolean', 'siren', 'humi
 
 // Preferred tab order — domains not listed here appear after, alphabetically
 const DOMAIN_ORDER = [
-  'light', 'switch', 'lock', 'climate', 'cover', 'fan', 'media_player',
+  'switch', 'lock', 'climate', 'cover', 'fan', 'media_player',
   'binary_sensor', 'sensor',
 ];
 
@@ -28,13 +28,11 @@ function isNoiseEntity(entity) {
   // Dead entities left behind by removed/renamed integrations — not actionable
   if (entity.state === 'unavailable' || entity.state === 'unknown') return true;
 
+  // Lights already have their own dedicated tab (Govee cloud) — never duplicate here
+  if (domain === 'light') return true;
+
   // Per-segment LED sub-entities (light.deck_lights_segment_001, etc.)
   if (GOVEE_SEGMENT_PATTERN.test(id)) return true;
-
-  // Govee "group" entities combine several real devices into one virtual
-  // entity — recognizable because their entity_id attribute is itself a list
-  // of other entity ids, rather than a normal attribute value
-  if (domain === 'light' && Array.isArray(entity.attributes?.entity_id)) return true;
 
   // Govee bridge diagnostic dumps duplicating state already shown elsewhere
   if (domain === 'sensor' && id.endsWith('_status') && entity.attributes?.platform_metadata) return true;
@@ -101,53 +99,6 @@ export default function HomeAssistantEntities() {
   function renderControls(entity) {
     const domain = domainOf(entity.entity_id);
     const isOn = entity.state === 'on' || entity.state === 'open' || entity.state === 'unlocked';
-
-    if (domain === 'light') {
-      const lightOn = entity.state === 'on';
-      const modes = entity.attributes?.supported_color_modes || [];
-      const supportsColor = modes.some((m) => ['rgb', 'hs', 'xy', 'rgbw', 'rgbww'].includes(m));
-      const supportsBrightness = modes.some((m) => m !== 'onoff') || entity.attributes?.brightness != null;
-      const brightnessPct = entity.attributes?.brightness != null
-        ? Math.round((entity.attributes.brightness / 255) * 100)
-        : 100;
-      const [r, g, b] = entity.attributes?.rgb_color || [255, 255, 255];
-      const hex = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
-
-      return (
-        <div className={styles.lightControls}>
-          <button
-            className={lightOn ? styles.toggleOn : styles.toggleOff}
-            onClick={() => callService('light', lightOn ? 'turn_off' : 'turn_on', { entity_id: entity.entity_id })}
-          >
-            {lightOn ? 'On' : 'Off'}
-          </button>
-          {supportsBrightness && (
-            <input
-              type="range"
-              min="1"
-              max="100"
-              defaultValue={brightnessPct}
-              onMouseUp={(e) => callService('light', 'turn_on', { entity_id: entity.entity_id, brightness_pct: Number(e.target.value) })}
-              onTouchEnd={(e) => callService('light', 'turn_on', { entity_id: entity.entity_id, brightness_pct: Number(e.target.value) })}
-            />
-          )}
-          {supportsColor && (
-            <input
-              type="color"
-              defaultValue={hex}
-              className={styles.colorPicker}
-              onChange={(e) => {
-                const hx = e.target.value;
-                const rr = parseInt(hx.slice(1, 3), 16);
-                const gg = parseInt(hx.slice(3, 5), 16);
-                const bb = parseInt(hx.slice(5, 7), 16);
-                callService('light', 'turn_on', { entity_id: entity.entity_id, rgb_color: [rr, gg, bb] });
-              }}
-            />
-          )}
-        </div>
-      );
-    }
 
     if (TOGGLE_DOMAINS.has(domain)) {
       return (
