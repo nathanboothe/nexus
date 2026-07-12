@@ -1,35 +1,40 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 16px;
-  max-width: 480px;
+  gap: 28px;
+  padding: 20px 16px 40px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
 .error {
-  background: #4a1a1a;
-  color: #ffb3b3;
-  padding: 8px 12px;
-  border-radius: 8px;
+  background: #2a1616;
+  border: 1px solid #4a2424;
+  color: #f0b3b3;
+  padding: 10px 14px;
+  border-radius: 10px;
   font-size: 13px;
 }
 
 .loading {
-  color: #999;
+  color: #8a8378;
   font-size: 13px;
 }
 
 .section {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 16px;
+  background: #16140f;
+  border: 1px solid #2a2620;
+  border-radius: 16px;
+  padding: 20px;
 }
 
-.section h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: #ccc;
+.sectionTitle {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c99a4a;
 }
 
 .grid {
@@ -39,17 +44,18 @@
 }
 
 .card {
-  background: #2a2a2a;
-  border-radius: 8px;
-  padding: 12px;
+  background: #1c1a15;
+  border: 1px solid #322d24;
+  border-radius: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .cardName {
   font-size: 13px;
-  color: #eee;
+  color: #f0ece2;
 }
 
 .cardControls {
@@ -59,15 +65,20 @@
 
 .btn {
   flex: 1;
-  background: #3a3a3a;
-  color: #fff;
-  border: 1px solid #4a4a4a;
-  border-radius: 6px;
-  padding: 6px;
+  background: #221f19;
+  color: #f0ece2;
+  border: 1px solid #3a352a;
+  border-radius: 8px;
+  padding: 8px;
   font-size: 12px;
+  min-height: 36px;
   cursor: pointer;
 }
 
 .btn:active {
-  background: #4a4a4a;
+  background: #332c1f;
+}
+
+.card input[type='range'] {
+  accent-color: #c99a4a;
 }
