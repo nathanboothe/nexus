@@ -72,4 +72,23 @@ router.post('/service', async (req, res) => {
   }
 });
 
+// ── CAMERA SNAPSHOT ── proxies HA's authenticated camera_proxy endpoint so
+// the browser never needs a direct HA connection or token of its own.
+router.get('/camera/:entityId', async (req, res) => {
+  try {
+    const response = await fetch(`${HA_URL}/api/camera_proxy/${req.params.entityId}`, {
+      headers: { Authorization: `Bearer ${HA_TOKEN}` },
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `HA returned ${response.status}` });
+    }
+    res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+    res.set('Cache-Control', 'no-store');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

@@ -78,6 +78,7 @@ export default function HomeAssistantEntities() {
   const [entities, setEntities] = useState([]);
   const [error, setError] = useState('');
   const [activeRoom, setActiveRoom] = useState(null);
+  const [cameraModal, setCameraModal] = useState(null); // entity_id of open camera, or null
 
   const load = useCallback(async () => {
     try {
@@ -212,6 +213,14 @@ export default function HomeAssistantEntities() {
       );
     }
 
+    if (domain === 'camera') {
+      return (
+        <button className={styles.smallBtn} onClick={() => setCameraModal(entity.entity_id)}>
+          View Feed
+        </button>
+      );
+    }
+
     // Read-only fallback (sensor, binary_sensor, sun, weather, person, etc.)
     const unit = entity.attributes?.unit_of_measurement;
     return <span className={styles.readout}>{entity.state}{unit ? ` ${unit}` : ''}</span>;
@@ -248,6 +257,34 @@ export default function HomeAssistantEntities() {
       )}
 
       {rooms.length === 0 && !error && <div className={styles.loading}>Loading entities…</div>}
+
+      {cameraModal && (
+        <CameraModal entityId={cameraModal} onClose={() => setCameraModal(null)} />
+      )}
+    </div>
+  );
+}
+
+// Snapshot refreshes every 2s while open — a live-ish view without needing
+// authenticated video streaming in the browser.
+function CameraModal({ entityId, onClose }) {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <button className={styles.modalClose} onClick={onClose}>✕</button>
+        <img
+          className={styles.modalImage}
+          src={`/api/ha/camera/${entityId}?t=${tick}`}
+          alt={entityId}
+        />
+      </div>
     </div>
   );
 }

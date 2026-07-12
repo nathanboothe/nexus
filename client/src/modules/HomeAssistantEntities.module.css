@@ -131,6 +131,42 @@
   font-size: 12px;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modalContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.modalImage {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  display: block;
+}
+
+.modalClose {
+  position: absolute;
+  top: -36px;
+  right: 0;
+  background: #221f19;
+  color: #f0ece2;
+  border: 1px solid #3a352a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
 .readout {
   font-family: 'SF Mono', 'Consolas', monospace;
   color: #e3a857;
