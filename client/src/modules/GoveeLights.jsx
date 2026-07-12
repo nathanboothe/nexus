@@ -79,6 +79,7 @@ const ROOM_ORDER = [
 export default function GoveeLights() {
   const [devices, setDevices] = useState([]);
   const [error, setError] = useState('');
+  const [statusMap, setStatusMap] = useState({});
 
   const loadDevices = useCallback(async () => {
     try {
@@ -90,11 +91,36 @@ export default function GoveeLights() {
     }
   }, []);
 
+  // Cross-reference HA's "<device> Status" sensors to show online/available
+  // state directly on the light cards — these carry an "Available" state
+  // when the physical device is actually reachable.
+  const loadStatuses = useCallback(async () => {
+    try {
+      const states = await api('/ha/states');
+      const map = {};
+      for (const s of states) {
+        if (s.entity_id.startsWith('sensor.') && s.entity_id.endsWith('_status') && s.attributes?.platform_metadata) {
+          const name = (s.attributes.friendly_name || '').replace(/ Status$/, '');
+          if (name) map[name] = s.state;
+        }
+      }
+      setStatusMap(map);
+    } catch {
+      // non-critical — just skip the status indicator if this fails
+    }
+  }, []);
+
   useEffect(() => {
     loadDevices();
     const id = setInterval(loadDevices, POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, [loadDevices]);
+
+  useEffect(() => {
+    loadStatuses();
+    const id = setInterval(loadStatuses, 15000);
+    return () => clearInterval(id);
+  }, [loadStatuses]);
 
   async function toggle(device, on) {
     try {
@@ -159,7 +185,10 @@ export default function GoveeLights() {
           <div className={styles.grid}>
             {rooms[room].map((d) => (
               <div key={d.device} className={styles.card}>
-                <div className={styles.cardName}>{d.deviceName}</div>
+                <div className={styles.cardName}>
+                  {statusMap[d.deviceName] === 'Available' && <span className={styles.statusDot} />}
+                  {d.deviceName}
+                </div>
                 <div className={styles.cardControls}>
                   <button className={styles.btn} onClick={() => toggle(d, true)}>On</button>
                   <button className={styles.btn} onClick={() => toggle(d, false)}>Off</button>

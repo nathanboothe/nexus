@@ -58,6 +58,15 @@
   color: #f0ece2;
 }
 
+.statusDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4caf50;
+  margin-right: 6px;
+}
+
 .cardControls {
   display: flex;
   gap: 8px;

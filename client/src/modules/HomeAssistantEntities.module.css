@@ -116,6 +116,21 @@
   font-size: 14px;
 }
 
+.climateBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectCtrl {
+  background: #221f19;
+  color: #f0ece2;
+  border: 1px solid #3a352a;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 12px;
+}
+
 .readout {
   font-family: 'SF Mono', 'Consolas', monospace;
   color: #e3a857;

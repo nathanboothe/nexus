@@ -4,58 +4,80 @@ import styles from './HomeAssistantEntities.module.css';
 
 const POLL_INTERVAL_MS = 15000;
 
-// Domains that support a simple on/off toggle via the generic homeassistant.toggle service
 const TOGGLE_DOMAINS = new Set(['switch', 'fan', 'input_boolean', 'siren', 'humidifier']);
-
-// Preferred tab order — domains not listed here appear after, alphabetically
-const DOMAIN_ORDER = [
-  'switch', 'lock', 'climate', 'cover', 'fan', 'media_player',
-  'binary_sensor', 'sensor',
-];
 
 function domainOf(entityId) {
   return entityId.split('.')[0];
 }
 
-// Govee's HA bridges create per-segment sub-entities and combined "group"
-// entities alongside the real physical devices — pure noise here.
+function nameOf(entity) {
+  return entity.attributes?.friendly_name || entity.entity_id;
+}
+
+// Govee's HA bridges create per-segment sub-entities alongside real devices — pure noise.
 const GOVEE_SEGMENT_PATTERN = /_segment_\d+$/;
+
+// Exact-name exclusions — duplicate/dead/irrelevant cards confirmed not wanted here
+const EXCLUDE_EXACT_NAMES = new Set([
+  '85" QLED',
+  'Home Theater',
+  'XBOX Series X',
+  'Remote UI',
+]);
+
+// Prefix exclusions
+const EXCLUDE_PREFIXES = ['Lucas iPhone', 'SM-F766U1', 'Sun'];
 
 function isNoiseEntity(entity) {
   const id = entity.entity_id;
   const domain = domainOf(id);
+  const name = nameOf(entity);
 
-  // Dead entities left behind by removed/renamed integrations — not actionable
   if (entity.state === 'unavailable' || entity.state === 'unknown') return true;
-
-  // Lights already have their own dedicated tab (Govee cloud) — never duplicate here
   if (domain === 'light') return true;
-
-  // Per-segment LED sub-entities (light.deck_lights_segment_001, etc.)
   if (GOVEE_SEGMENT_PATTERN.test(id)) return true;
-
-  // Govee bridge diagnostic dumps duplicating state already shown elsewhere
   if (domain === 'sensor' && id.endsWith('_status') && entity.attributes?.platform_metadata) return true;
+  if (domain === 'button' && (id.endsWith('_request_platform_api_state') || id.endsWith('_favorite_current_song'))) return true;
 
-  // Noisy utility buttons with no useful action from this dashboard
-  if (domain === 'button' && (id.endsWith('_request_platform_api_state') || id.endsWith('_favorite_current_song'))) {
-    return true;
-  }
+  // All power switches except the one explicitly kept
+  if (domain === 'switch' && id.endsWith('_power_switch') && id !== 'switch.wiz_socket_c095c5') return true;
+
+  if (EXCLUDE_EXACT_NAMES.has(name)) return true;
+  if (EXCLUDE_PREFIXES.some((p) => name.startsWith(p))) return true;
 
   return false;
 }
 
-function friendlyDomainLabel(domain) {
-  return domain
-    .split('_')
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(' ');
+// Room assignment — first matching rule wins. Anything unmatched falls into "Other".
+const ROOM_RULES = [
+  { test: (n) => n.startsWith('Firewalla'), room: 'Network Core' },
+  { test: (n) => n.startsWith('Hallway'), room: 'Upstairs Hallway' },
+  { test: (n) => n.startsWith('Loft'), room: 'Loft' },
+  { test: (n) => n.startsWith('Lucas'), room: "Lucas's Room" },
+  { test: (n) => n.startsWith('Rec Room'), room: 'Rec Room' },
+  { test: (n) => n.startsWith('Sam'), room: "Sam's Room" },
+  { test: (n) => n.startsWith('Tyler'), room: 'Cottage' }, // was "Tyler's Room"
+];
+
+const ROOM_ORDER = ['Rec Room', "Lucas's Room", "Sam's Room", 'Cottage', 'Loft', 'Upstairs Hallway', 'Network Core'];
+
+function roomOf(entity) {
+  const name = nameOf(entity);
+  const match = ROOM_RULES.find((r) => r.test(name));
+  return match ? match.room : 'Other';
+}
+
+// Card display name override — e.g. the Hallway thermostat is labeled "Thermostat"
+function displayName(entity) {
+  const name = nameOf(entity);
+  if (name === 'Hallway') return 'Thermostat';
+  return name;
 }
 
 export default function HomeAssistantEntities() {
   const [entities, setEntities] = useState([]);
   const [error, setError] = useState('');
-  const [activeDomain, setActiveDomain] = useState(null);
+  const [activeRoom, setActiveRoom] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -76,25 +98,25 @@ export default function HomeAssistantEntities() {
   async function callService(domain, service, data) {
     try {
       await api('/ha/service', 'POST', { domain, service, data });
-      setTimeout(load, 500); // let HA settle, then refresh
+      setTimeout(load, 500);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  const byDomain = entities.filter((e) => !isNoiseEntity(e)).reduce((acc, e) => {
-    const d = domainOf(e.entity_id);
-    acc[d] = acc[d] || [];
-    acc[d].push(e);
+  const byRoom = entities.filter((e) => !isNoiseEntity(e)).reduce((acc, e) => {
+    const r = roomOf(e);
+    acc[r] = acc[r] || [];
+    acc[r].push(e);
     return acc;
   }, {});
 
-  const domains = [
-    ...DOMAIN_ORDER.filter((d) => byDomain[d]?.length),
-    ...Object.keys(byDomain).filter((d) => !DOMAIN_ORDER.includes(d)).sort(),
+  const rooms = [
+    ...ROOM_ORDER.filter((r) => byRoom[r]?.length),
+    ...Object.keys(byRoom).filter((r) => !ROOM_ORDER.includes(r)).sort(),
   ];
 
-  const current = activeDomain && byDomain[activeDomain] ? activeDomain : domains[0];
+  const current = activeRoom && byRoom[activeRoom] ? activeRoom : rooms[0];
 
   function renderControls(entity) {
     const domain = domainOf(entity.entity_id);
@@ -134,17 +156,50 @@ export default function HomeAssistantEntities() {
 
     if (domain === 'climate') {
       const target = entity.attributes?.temperature;
+      const hvacModes = entity.attributes?.hvac_modes || [];
+      const fanModes = entity.attributes?.fan_modes || [];
+      const presetModes = entity.attributes?.preset_modes || [];
+
       return (
-        <div className={styles.climateBtns}>
-          <button
-            className={styles.smallBtn}
-            onClick={() => callService('climate', 'set_temperature', { entity_id: entity.entity_id, temperature: (target ?? 70) - 1 })}
-          >−</button>
-          <span className={styles.climateTemp}>{target ?? '—'}°</span>
-          <button
-            className={styles.smallBtn}
-            onClick={() => callService('climate', 'set_temperature', { entity_id: entity.entity_id, temperature: (target ?? 70) + 1 })}
-          >+</button>
+        <div className={styles.climateBlock}>
+          <div className={styles.climateBtns}>
+            <button
+              className={styles.smallBtn}
+              onClick={() => callService('climate', 'set_temperature', { entity_id: entity.entity_id, temperature: (target ?? 70) - 1 })}
+            >−</button>
+            <span className={styles.climateTemp}>{target ?? '—'}°</span>
+            <button
+              className={styles.smallBtn}
+              onClick={() => callService('climate', 'set_temperature', { entity_id: entity.entity_id, temperature: (target ?? 70) + 1 })}
+            >+</button>
+          </div>
+          {hvacModes.length > 0 && (
+            <select
+              className={styles.selectCtrl}
+              value={entity.state}
+              onChange={(e) => callService('climate', 'set_hvac_mode', { entity_id: entity.entity_id, hvac_mode: e.target.value })}
+            >
+              {hvacModes.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          )}
+          {fanModes.length > 0 && (
+            <select
+              className={styles.selectCtrl}
+              value={entity.attributes?.fan_mode || ''}
+              onChange={(e) => callService('climate', 'set_fan_mode', { entity_id: entity.entity_id, fan_mode: e.target.value })}
+            >
+              {fanModes.map((m) => <option key={m} value={m}>Fan: {m}</option>)}
+            </select>
+          )}
+          {presetModes.length > 0 && (
+            <select
+              className={styles.selectCtrl}
+              value={entity.attributes?.preset_mode || ''}
+              onChange={(e) => callService('climate', 'set_preset_mode', { entity_id: entity.entity_id, preset_mode: e.target.value })}
+            >
+              {presetModes.map((m) => <option key={m} value={m}>Preset: {m}</option>)}
+            </select>
+          )}
         </div>
       );
     }
@@ -167,32 +222,32 @@ export default function HomeAssistantEntities() {
       {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.tabs}>
-        {domains.map((d) => (
+        {rooms.map((r) => (
           <button
-            key={d}
-            className={d === current ? styles.tabActive : styles.tab}
-            onClick={() => setActiveDomain(d)}
+            key={r}
+            className={r === current ? styles.tabActive : styles.tab}
+            onClick={() => setActiveRoom(r)}
           >
-            {friendlyDomainLabel(d)} <span className={styles.tabCount}>{byDomain[d].length}</span>
+            {r} <span className={styles.tabCount}>{byRoom[r].length}</span>
           </button>
         ))}
       </div>
 
       {current && (
         <div className={styles.grid}>
-          {byDomain[current]
+          {byRoom[current]
             .slice()
-            .sort((a, b) => (a.attributes?.friendly_name || a.entity_id).localeCompare(b.attributes?.friendly_name || b.entity_id))
+            .sort((a, b) => nameOf(a).localeCompare(nameOf(b)))
             .map((entity) => (
               <div key={entity.entity_id} className={styles.card}>
-                <div className={styles.cardName}>{entity.attributes?.friendly_name || entity.entity_id}</div>
+                <div className={styles.cardName}>{displayName(entity)}</div>
                 {renderControls(entity)}
               </div>
             ))}
         </div>
       )}
 
-      {domains.length === 0 && !error && <div className={styles.loading}>Loading entities…</div>}
+      {rooms.length === 0 && !error && <div className={styles.loading}>Loading entities…</div>}
     </div>
   );
 }
