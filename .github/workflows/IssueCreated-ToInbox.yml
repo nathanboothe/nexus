@@ -1,0 +1,38 @@
+name: Issue → Inbox
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  set_inbox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Project Status = Inbox
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            // Replace YOUR_PROJECT_ID with your GitHub Project ID
+            const projectId = "YOUR_PROJECT_ID";
+
+            // Replace STATUS_FIELD_ID with the field ID for "Status"
+            const statusFieldId = "STATUS_FIELD_ID";
+
+            await github.graphql(`
+              mutation {
+                updateProjectV2ItemFieldValue(
+                  input: {
+                    projectId: "${projectId}"
+                    itemId: "${issue.node_id}"
+                    fieldId: "${statusFieldId}"
+                    value: { singleSelectOptionId: "INBOX_OPTION_ID" }
+                  }
+                ) {
+                  projectV2Item {
+                    id
+                  }
+                }
+              }
+            `);

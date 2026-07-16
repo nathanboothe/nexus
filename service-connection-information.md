@@ -29,20 +29,20 @@ HA IP address: 192.168.230.81
 HA URL: https://localhost.local:8123
 HA PAT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMGFkYmI5MzAwY2U0Y2MzYTllNTVkZTRiYWIzMWFhNyIsImlhdCI6MTc4MjY0NDY2OSwiZXhwIjoyMDk4MDA0NjY5fQ.-JkGSrXKloGrAiUBw4mzCN_N_WI2ZgMY6VmhJcko54Y
 
+## Nexus Server Information
 Nexus Server IP: 192.168.230.4
 
+## Govee Connection Information
 Govee API key: 6bd70324-b6d1-4250-9de3-3076523f5976
 
+## Google Calendar Connection Information
 Google Calendar to Skylight Client ID: 226139675448-mc66ct0jlhu13rb66dsmv53bbrbb6ufd.apps.googleusercontent.com
 Google Calendar to Skylight Client Secret: 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
 
+## Azure Connection Information
 Azure Genealogy Automation Personal App Registration: c1252a88-04fb-4716-a856-37dacbe2fa09
 
-Powershell
-- Rebuild the dashboard
-cd C:\apps\nexus\client
-npm run build
-c:\tools\nssm.exe restart NexusDashboard
+
 
 
 
