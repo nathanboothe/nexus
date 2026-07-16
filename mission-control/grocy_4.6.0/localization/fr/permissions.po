@@ -1,0 +1,138 @@
+# Translators:
+# Hydreliox <hydreliox@gmail.com>, 2020
+# Vulf vulf, 2025
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-05-01T17:59:17+00:00\n"
+"PO-Revision-Date: 2020-08-29 16:33+0000\n"
+"Last-Translator: Vulf vulf, 2025\n"
+"Language-Team: French (https://app.transifex.com/grocy/teams/93189/fr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
+"X-Domain: grocy/permissions\n"
+
+# All permissions
+msgid "ADMIN"
+msgstr "Administrateur"
+
+# Create users
+msgid "USERS_CREATE"
+msgstr "Création des utilisateurs"
+
+# Edit users (including passwords)
+msgid "USERS_EDIT"
+msgstr "Modification des utilisateurs"
+
+# Show users
+msgid "USERS_READ"
+msgstr "Consultation des utilisateurs"
+
+# Edit own user data / change own password
+msgid "USERS_EDIT_SELF"
+msgstr "Modification de son propre utilisateur"
+
+# Undo charge cycle
+msgid "BATTERIES_UNDO_CHARGE_CYCLE"
+msgstr "Annuler le cycle de recharge des piles"
+
+# Track charge cycle
+msgid "BATTERIES_TRACK_CHARGE_CYCLE"
+msgstr "Suivre la recharge des piles"
+
+# Track execution
+msgid "CHORE_TRACK_EXECUTION"
+msgstr "Exécuter le suivi de la corvée"
+
+# Undo execution
+msgid "CHORE_UNDO_EXECUTION"
+msgstr "Annuler l'exécution de la corvée"
+
+# Edit master data
+msgid "MASTER_DATA_EDIT"
+msgstr "Editer les données principales"
+
+# Undo execution
+msgid "TASKS_UNDO_EXECUTION"
+msgstr "Annuler l'exécution de la tâche"
+
+# Mark completed
+msgid "TASKS_MARK_COMPLETED"
+msgstr "Marquer la tâche comme terminée"
+
+# Edit stock entries
+msgid "STOCK_EDIT"
+msgstr "Edition du stock"
+
+# Transfer
+msgid "STOCK_TRANSFER"
+msgstr "Transfert de stock"
+
+# Inventory
+msgid "STOCK_INVENTORY"
+msgstr "Inventaire du stock"
+
+# Consume
+msgid "STOCK_CONSUME"
+msgstr "Consommer dans le stock"
+
+# Open products
+msgid "STOCK_OPEN"
+msgstr "Ouvrir le stock"
+
+# Purchase
+msgid "STOCK_PURCHASE"
+msgstr "Acheter pour le stock"
+
+# Add items
+msgid "SHOPPINGLIST_ITEMS_ADD"
+msgstr "Ajouter un article à la liste de courses"
+
+# Remove items
+msgid "SHOPPINGLIST_ITEMS_DELETE"
+msgstr "Supprimer un article de la liste de courses"
+
+# User management
+msgid "USERS"
+msgstr "Utilisateurs"
+
+# Stock
+msgid "STOCK"
+msgstr "Stock"
+
+# Shopping list
+msgid "SHOPPINGLIST"
+msgstr "Liste de courses"
+
+# Chores
+msgid "CHORES"
+msgstr "Corvées"
+
+# Batteries
+msgid "BATTERIES"
+msgstr "Piles"
+
+# Tasks
+msgid "TASKS"
+msgstr "Tâches"
+
+# Recipes
+msgid "RECIPES"
+msgstr "Recettes"
+
+# Equipment
+msgid "EQUIPMENT"
+msgstr "Equipement"
+
+# Calendar
+msgid "CALENDAR"
+msgstr "Calendrier"
+
+# Meal plan
+msgid "RECIPES_MEALPLAN"
+msgstr " Programme alimentaire"

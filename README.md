@@ -1,60 +1,51 @@
-# Nexus
+# Life Management System
 
-Self-hosted-no-more home automation dashboard. Modules: Rec Room (Samsung TV / Denon AVR / Google TV), Smart Home (Govee).
+---
 
-## Architecture
+##  ID's and Keys
+Airtable Base ID: appjBazhQ7EqRseCc
+Airtable Inbox Table ID: tbl8CMsONJjt9FhT4
+Airtable Projects Table ID: tblIqHNLfscf2e7E3
+Airtable Reference Table ID: tblt4E9IPzaGquwt6
+Airtable Areas Table ID: tblHQVgaivSA0xhka
+Airtable Tasks able ID: tblVUajzt9YLY4HfO
+Airtable Calendar Table ID: tblUe7YvoPdOXY8fj
+Airtable Habits Table ID: tblaDA9v7sm50etcB
+Airtable Notes Table ID: tbljCX8a11KD13xeX
+Airtable Devices Table ID: tblBECFHsYdWob4w7
+Airtable Automations log Table ID: tbblJUcPz7fR6IqXbJ
+Airtable Repositories Table ID: tblQdcvLM6T9k7OS0
+Airtable Sources Table ID: tblie3slkqg7Bjy0h
+Airtable Information records Table ID: tblmRZW3e4eLbneIR
+Airtable Subjects (People) Table ID: tblUEXXS5NJtop9hu
+Airtable IR-Subject Links Table ID: tblFOtWweDiSIcjCs
+Airtable Events Table ID: tblWn1E6FZWjbHPDP
+Airtable Families Table ID: tbljXYZgwVuWB7FS3
+Airtable Research Questions Table ID: tbleFLcZ0on2o60sq
+Airtable Nexus PAT: patqnemzAJVbvfSpV.aae802a3af80d77f0080808b319f74eb25494e9ca4baa16b9e91615b831129d1
 
-Everything routes through Home Assistant's Nabu Casa remote URL — nothing needs
-a direct local network connection anymore:
+## Home Assitant Connection Information
+HA IP address: 192.168.230.81
+HA URL: https://localhost.local:8123
+HA PAT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMGFkYmI5MzAwY2U0Y2MzYTllNTVkZTRiYWIzMWFhNyIsImlhdCI6MTc4MjY0NDY2OSwiZXhwIjoyMDk4MDA0NjY5fQ.-JkGSrXKloGrAiUBw4mzCN_N_WI2ZgMY6VmhJcko54Y
 
-- **Samsung TV** — Broadlink IR via HA (`remote.base_station`)
-- **Denon AVR** — via HA's `media_player.home_theater_2` entity (turn_on/off,
-  volume_set, volume_mute, select_source) — no more direct port 11080 calls
-- **Google TV nav** — via HA's Android TV remote integration (`remote.rec_room_google_tv`)
-- **Google TV app launch** — via HA's `androidtv.adb_command` service
-  (`media_player.rec_room_google_tv_3`), running the same `am start -n <activity>`
-  command that used to run directly from this server
-- **Govee (Smart Home)** — Govee's own cloud API, unaffected by any of this
+Nexus Server IP: 192.168.230.4
 
-HA itself stays on your LAN as it always has — Nabu Casa just gives it a stable
-HTTPS URL, so this server can live anywhere (including fully in the cloud) and
-still reach it.
+Govee API key: 6bd70324-b6d1-4250-9de3-3076523f5976
 
-## Environment variables (set these in Render, not in a committed file)
+Google Calendar to Skylight Client ID: 226139675448-mc66ct0jlhu13rb66dsmv53bbrbb6ufd.apps.googleusercontent.com
+Google Calendar to Skylight Client Secret: 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
 
-| Variable | Value |
-|---|---|
-| `HA_URL` | `https://nlg3ibiwfsee8gosfotjysbqqtxyh0lk.ui.nabu.casa` |
-| `HA_TOKEN` | HA long-lived access token (Profile → Security → Long-Lived Access Tokens) |
-| `GOVEE_API_KEY` | your existing Govee API key |
+Azure Genealogy Automation Personal App Registration: c1252a88-04fb-4716-a856-37dacbe2fa09
 
-## Deploying to Render
+Powershell
+- Rebuild the dashboard
+cd C:\apps\nexus\client
+npm run build
+c:\tools\nssm.exe restart NexusDashboard
 
-1. Push this repo to GitHub.
-2. In Render: New → Blueprint → point at the repo (it'll read `render.yaml`).
-3. Set the three environment variables above in the Render dashboard (marked `sync: false` so they're not stored in git).
-4. Deploy. Render runs the build (`client` build + `server` install) then starts `node index.js`.
 
-## Local development
 
-```powershell
-cd server
-Copy-Item config.example.js config.js
-notepad config.js   # fill in HA_URL / HA_TOKEN / GOVEE_API_KEY directly, or export as env vars
-npm install
-cd ../client
-npm install
-npm run build       # or `npm run dev` for local hot-reload against the Vite dev server
-```
-
-`config.js` is gitignored — it never gets committed or pushed to Render; on Render the same values come from environment variables instead.
-
-## Before this actually works, double check in Home Assistant:
-
-- `media_player.home_theater_2` supports `select_source` with the exact source
-  names you want to use — check its `source_list` attribute in
-  Developer Tools → States, since the value passed to `/api/denon/input` must
-  match one of those exactly.
-- The Android TV integration for `media_player.rec_room_google_tv_3` has ADB
-  access configured (it must, since this is the same integration nav commands
-  already rely on) — `androidtv.adb_command` needs that to run shell commands.
+to do:
+click project and edit
+govee devices not contolled api - mqtt
