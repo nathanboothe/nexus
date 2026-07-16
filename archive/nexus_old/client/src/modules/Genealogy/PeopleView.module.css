@@ -1,0 +1,132 @@
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0;
+  height: calc(100vh - 200px);
+  min-height: 500px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.searchBar {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.searchBar input { font-size: 13px; }
+
+.lineFilters {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.lineBtn {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-align: left;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.lineBtn:hover { background: var(--surface2); color: var(--text); }
+.lineBtnActive { background: rgba(153,53,86,0.15) !important; color: #993556 !important; }
+
+.personList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.personItem {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.personItem:hover { background: var(--surface2); }
+.personItemActive { background: rgba(153,53,86,0.1) !important; }
+
+.personName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.main {
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text3);
+}
+
+.detail { }
+
+.detailName {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+}
+
+.fieldValue {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.manualReminder {
+  margin-top: 20px;
+  padding: 10px 14px;
+  background: rgba(186,117,23,0.08);
+  border: 1px solid rgba(186,117,23,0.2);
+  border-radius: 8px;
+  color: var(--amber);
+}

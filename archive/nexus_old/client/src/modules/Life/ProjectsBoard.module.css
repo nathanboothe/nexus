@@ -1,0 +1,305 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.boardPane {
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filter:hover { background: var(--surface2); color: var(--text); }
+.filterActive { background: rgba(46,95,163,0.2) !important; color: var(--accent-light) !important; border-color: var(--accent) !important; }
+
+.addBtn {
+  font-size: 13px;
+  padding: 7px 14px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.addBtn:hover { background: var(--accent-light); }
+.addBtn:disabled { opacity: 0.4; cursor: default; }
+
+.addForm {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.column {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-height: 200px;
+}
+
+.colHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.colDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.colLabel {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+
+.colCount {
+  font-size: 11px;
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 10px;
+  color: var(--text2);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.card:hover { border-color: var(--accent); background: rgba(46,95,163,0.05); }
+.cardSelected { border-color: var(--accent-light) !important; background: rgba(46,95,163,0.1) !important; }
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.cardName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.3;
+}
+
+.cardArea {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.moveBtn {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.moveBtn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* Edit panel */
+.editPane {
+  width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+.editHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.editTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.closeBtn {
+  font-size: 16px;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.12s;
+}
+.closeBtn:hover { color: var(--text); background: var(--surface2); }
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.formRow {
+  display: flex;
+  gap: 10px;
+}
+
+.formLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+}
+
+.formSelect {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+}
+.formSelect:focus { border-color: var(--accent); }
+
+.formTextarea {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+  width: 100%;
+}
+.formTextarea:focus { border-color: var(--accent); }
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.saveBtn {
+  flex: 1;
+  padding: 9px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.saveBtn:hover:not(:disabled) { background: var(--accent-light); }
+.saveBtn:disabled { opacity: 0.4; cursor: default; }
+
+.deleteBtn {
+  padding: 9px 14px;
+  background: transparent;
+  border: 1px solid rgba(192,57,43,0.4);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--red);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.deleteBtn:hover:not(:disabled) { background: rgba(192,57,43,0.1); }
+.deleteBtn:disabled { opacity: 0.4; cursor: default; }
+
+.metaInfo {
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .editPane {
+    width: 100%;
+    position: static;
+  }
+}
