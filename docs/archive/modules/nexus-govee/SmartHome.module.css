@@ -1,0 +1,276 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.viewToggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.toggleBtn {
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.toggleBtn:hover { color: var(--text); }
+.toggleActive { background: var(--surface2); color: var(--text) !important; }
+
+/* Rooms */
+.rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.roomSection { }
+
+.roomHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.roomName {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+}
+
+.roomActions {
+  display: flex;
+  gap: 6px;
+}
+
+.roomBtn {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.roomBtn:hover { background: var(--surface2); color: var(--text); }
+
+.deviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+/* Device card */
+.deviceCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.12s;
+}
+
+.deviceCardOn {
+  border-color: rgba(186,117,23,0.4);
+  background: rgba(186,117,23,0.04);
+}
+
+.deviceTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deviceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.deviceIcon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.deviceName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.powerBtn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.12s;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.powerBtn:hover:not(:disabled) { background: var(--surface); color: var(--text); }
+.powerBtn:disabled { cursor: default; opacity: 0.5; }
+.powerBtnOn {
+  background: rgba(186,117,23,0.2) !important;
+  border-color: rgba(186,117,23,0.4) !important;
+  color: var(--amber) !important;
+}
+
+/* Controls */
+.deviceControls { }
+
+.controlLink {
+  font-size: 12px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: color 0.12s;
+  text-align: left;
+}
+.controlLink:hover { color: var(--text2); }
+
+.brightnessRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--amber);
+  cursor: pointer;
+}
+
+/* Sensors */
+.sensorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.sensorCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+/* Expanded controls */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.controlRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text3);
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.controlRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--amber);
+  cursor: pointer;
+}
+
+.sliderWarm {
+  flex: 1;
+  height: 4px;
+  cursor: pointer;
+  accent-color: #f39c12;
+}
+
+.colorPicker {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+
+.colorSwatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+.colorSwatch:hover { transform: scale(1.2); }
+
+.collapseBtn {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2);
+  cursor: pointer;
+  align-self: flex-end;
+}
+.collapseBtn:hover { color: var(--text); }
+
+.expandHint {
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.12s;
+}
+.expandHint:hover { color: var(--text2); }
+
+.powerBtnUnknown {
+  background: var(--surface2) !important;
+  color: var(--text3) !important;
+  border-color: var(--border) !important;
+}
