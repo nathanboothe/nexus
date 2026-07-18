@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: linkwarden-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: linkwarden
+      POSTGRES_USER: linkwarden
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:latest
+    container_name: linkwarden
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      DATABASE_URL: postgresql://linkwarden:${POSTGRES_PASSWORD}@postgres:5432/linkwarden
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data/data
