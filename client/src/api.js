@@ -14,6 +14,17 @@ async function request(path, options = {}) {
   return res.json();
 }
 
+// ── Default export ───────────────────────────────────────────────────
+// Some older modules (e.g. GoveeLights.jsx) call this directly as
+// api(path, method, body) instead of using the named helpers below.
+// Both styles hit the same request() function underneath.
+export default function api(path, method = 'GET', body) {
+  return request(path, {
+    method,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
 // ── Health ────────────────────────────────────────────────────────────
 export const health = () => request('/health');
 
@@ -35,36 +46,4 @@ export const ha = {
 
 // ── Denon ─────────────────────────────────────────────────────────────
 export const denon = {
-  status: () => request('/denon/status'),
-  command: (command) => request('/denon/command', { method: 'POST', body: JSON.stringify({ command }) }),
-};
-
-// ── Rec Room (Samsung IR, Google TV, grouped speakers) ──────────────────
-export const recroom = {
-  samsung: (command) => request('/recroom/samsung/command', { method: 'POST', body: JSON.stringify({ command }) }),
-  googleTvNav: (command) => request('/recroom/googletv/nav', { method: 'POST', body: JSON.stringify({ command }) }),
-  googleTvLaunch: (activity) => request('/recroom/googletv/launch', { method: 'POST', body: JSON.stringify({ activity }) }),
-  groupSearchPlay: (query) => request('/recroom/speakers/group-search', { method: 'POST', body: JSON.stringify({ query }) }),
-  groupFavorites: () => request('/recroom/speakers/group-favorites', { method: 'POST' }),
-};
-
-// ── Genealogy ─────────────────────────────────────────────────────────
-export const genealogy = {
-  upload: (file) => {
-    const form = new FormData();
-    form.append('document', file);
-    return fetch(`${BASE}/genealogy/upload`, { method: 'POST', body: form }).then(r => r.json());
-  },
-  run: (jsonFile) => request('/genealogy/run', { method: 'POST', body: JSON.stringify({ jsonFile }) }),
-  log: () => request('/genealogy/log'),
-  logEntry: (runId) => request(`/genealogy/log/${runId}`),
-};
-
-// ── WebSocket ─────────────────────────────────────────────────────────
-export function connectWebSocket(onMessage) {
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  const ws = new WebSocket(`${protocol}://${window.location.host}`);
-  ws.onmessage = (e) => onMessage(JSON.parse(e.data));
-  ws.onclose = () => setTimeout(() => connectWebSocket(onMessage), 3000);
-  return ws;
-}
+  status: () =>
