@@ -35,11 +35,11 @@ const SAMSUNG_CMDS = {
 
 // Google TV Android TV Remote commands
 const GOOGLE_CMDS = {
-  up:       'UP',
-  down:     'DOWN',
-  left:     'LEFT',
-  right:    'RIGHT',
-  ok:       'CENTER',
+  up:       'DPAD_UP',
+  down:     'DPAD_DOWN',
+  left:     'DPAD_LEFT',
+  right:    'DPAD_RIGHT',
+  ok:       'DPAD_CENTER',
   back:     'BACK',
   home:     'HOME',
   menu:     'MENU',
