@@ -6,6 +6,16 @@ const router = Router();
 
 const BROADLINK_ENTITY = config.entities.broadlink;             // remote.base_station
 const GOOGLE_TV_REMOTE_ENTITY = config.entities.googleTvRemote;  // remote.rec_room_google_tv
+const DENON_ENTITY = config.entities.denon;                      // media_player.home_theater_2
+
+const MASS_GROUP = [
+  config.entities.massHomeTheater,
+  config.entities.massKitchen,
+  config.entities.massLivingRoom,
+  config.entities.massLoft,
+];
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ── SAMSUNG TV (Broadlink IR via HA) ────────────────────────────────────────
 // body: { command: 'power' | 'volume_up' | 'volume_down' | 'channel_up' | 'channel_down' | 'mute' }
@@ -53,6 +63,81 @@ router.post('/googletv/launch', async (req, res) => {
       activity,
     });
     res.json({ ok: true, activity });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUPING: helper to switch Denon to HEOS Music + join the group ──
+async function prepAndJoinGroup() {
+  await callService('media_player', 'select_source', {
+    entity_id: DENON_ENTITY,
+    source: 'HEOS Music',
+  });
+  await delay(3000);
+  await callService('media_player', 'join', {
+    entity_id: config.entities.massHomeTheater,
+    group_members: MASS_GROUP,
+  });
+}
+
+// ── SPEAKER GROUP: SEARCH & PLAY (YouTube Music) ──
+// body: { query: 'Fear NF' }
+router.post('/speakers/group-search', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || !query.trim()) {
+      return res.status(400).json({ error: 'query is required' });
+    }
+
+    await prepAndJoinGroup();
+
+    const searchResult = await callService(
+      'music_assistant',
+      'search',
+      {
+        config_entry_id: config.musicAssistant.configEntryId,
+        name: query.trim(),
+        media_type: 'track',
+        limit: 1,
+      },
+      { returnResponse: true }
+    );
+
+    // HA wraps response-returning service calls under service_response
+    const payload = searchResult?.service_response ?? searchResult ?? {};
+    const track = payload?.tracks?.[0];
+
+    if (!track?.uri) {
+      return res.status(404).json({ error: 'No matching track found', raw: payload });
+    }
+
+    await callService('music_assistant', 'play_media', {
+      entity_id: config.entities.massHomeTheater,
+      media_id: track.uri,
+      media_type: 'track',
+      enqueue: 'replace',
+    });
+
+    res.json({ ok: true, played: track.uri });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: PLAY YOUTUBE MUSIC LIKED SONGS ──
+router.post('/speakers/group-favorites', async (req, res) => {
+  try {
+    await prepAndJoinGroup();
+
+    await callService('music_assistant', 'play_media', {
+      entity_id: config.entities.massHomeTheater,
+      media_id: config.musicAssistant.likedMusicUri,
+      media_type: 'playlist',
+      enqueue: 'replace',
+    });
+
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

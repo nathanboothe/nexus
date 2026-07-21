@@ -113,6 +113,8 @@ export default function RecRoom() {
   const [nowPlaying, setNowPlaying] = useState(null);
   const [xboxOnline, setXboxOnline] = useState(null);
   const [ps5Online, setPs5Online] = useState(null);
+  const [groupQuery, setGroupQuery] = useState('');
+  const [groupBusy, setGroupBusy] = useState(false);
 
   function flash(msg) {
     setFeedback(msg);
@@ -170,6 +172,21 @@ export default function RecRoom() {
     flash(`Switch: ${key}`);
   }
 
+  async function groupSearchPlay() {
+    if (!groupQuery.trim()) { flash('Enter a search first'); return; }
+    setGroupBusy(true);
+    await api('/speakers/group-search', 'POST', { query: groupQuery.trim() });
+    flash(`Playing: ${groupQuery.trim()}`);
+    setGroupBusy(false);
+  }
+
+  async function groupFavorites() {
+    setGroupBusy(true);
+    await api('/speakers/group-favorites', 'POST');
+    flash('Playing Liked Music');
+    setGroupBusy(false);
+  }
+
   return (
     <div className={styles.page}>
       {/* Header + Now Playing */}
@@ -202,6 +219,38 @@ export default function RecRoom() {
       </div>
 
       {feedback && <div className={styles.feedback}>{feedback}</div>}
+
+      {/* Grouped speakers */}
+      <div className={styles.section}>
+        <p className={styles.sectionLabel}>Rec Room + Speakers (Kitchen, Living Room, Loft)</p>
+        <div className={styles.topRow}>
+          <input
+            type="text"
+            value={groupQuery}
+            onChange={e => setGroupQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') groupSearchPlay(); }}
+            placeholder="Search YouTube Music..."
+            disabled={groupBusy}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid var(--border, #333)',
+              background: 'var(--input-bg, #1a1a1a)',
+              color: 'inherit',
+              fontSize: 14,
+            }}
+          />
+          <button className={styles.btn} onClick={groupSearchPlay} disabled={groupBusy}>
+            Search &amp; Play
+          </button>
+        </div>
+        <div className={styles.topRow} style={{ marginTop: 8 }}>
+          <button className={styles.btn} onClick={groupFavorites} disabled={groupBusy}>
+            Play Liked Music
+          </button>
+        </div>
+      </div>
 
       {/* Device selector */}
       <div className={styles.deviceBar}>
