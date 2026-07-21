@@ -21,9 +21,11 @@ async function haCall(path, method = 'GET', body) {
   return contentType.includes('application/json') ? res.json() : res.text();
 }
 
-// Used by recroom.js to call any HA service (remote.send_command, etc.)
-export async function callService(domain, service, data) {
-  return haCall(`/api/services/${domain}/${service}`, 'POST', data);
+// Used by recroom.js/denon.js to call any HA service (remote.send_command, etc.)
+// Pass { returnResponse: true } for actions that return data (e.g. music_assistant.search)
+export async function callService(domain, service, data, options = {}) {
+  const query = options.returnResponse ? '?return_response=true' : '';
+  return haCall(`/api/services/${domain}/${service}${query}`, 'POST', data);
 }
 
 export async function getState(entityId) {
