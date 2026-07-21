@@ -3,13 +3,13 @@
 const BASE = '/api';
 
 async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch('${BASE}${path}', {
     headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    throw new Error(err.error || 'HTTP ${res.status}');
   }
   return res.json();
 }
@@ -30,16 +30,16 @@ export const health = () => request('/health');
 
 // ── Airtable ──────────────────────────────────────────────────────────
 export const airtable = {
-  list: (table, params = {}) => request(`/airtable/${table}?${new URLSearchParams(params)}`),
-  create: (table, fields) => request(`/airtable/${table}`, { method: 'POST', body: JSON.stringify(fields) }),
-  update: (table, recordId, fields) => request(`/airtable/${table}/${recordId}`, { method: 'PATCH', body: JSON.stringify(fields) }),
-  delete: (table, recordId) => request(`/airtable/${table}/${recordId}`, { method: 'DELETE' }),
+  list: (table, params = {}) => request('/airtable/${table}?${new URLSearchParams(params)}'),
+  create: (table, fields) => request('/airtable/${table}', { method: 'POST', body: JSON.stringify(fields) }),
+  update: (table, recordId, fields) => request('/airtable/${table}/${recordId}', { method: 'PATCH', body: JSON.stringify(fields) }),
+  delete: (table, recordId) => request('/airtable/${table}/${recordId}', { method: 'DELETE' }),
 };
 
 // ── Home Assistant ────────────────────────────────────────────────────
 export const ha = {
   states: () => request('/ha/states'),
-  state: (entityId) => request(`/ha/states/${entityId}`),
+  state: (entityId) => request('/ha/states/${entityId}'),
   service: (domain, service, data = {}) => request('/ha/service', { method: 'POST', body: JSON.stringify({ domain, service, data }) }),
   script: (scriptId) => request('/ha/script', { method: 'POST', body: JSON.stringify({ scriptId }) }),
 };
