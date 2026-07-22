@@ -143,4 +143,61 @@ router.post('/speakers/group-favorites', async (req, res) => {
   }
 });
 
+// ── LIBRARY: LIST SYNCED PLAYLISTS ──
+// Pulls directly from Music Assistant's synced library (music_assistant.get_library),
+// which now includes whatever YouTube Music has synced in — Liked Music, Episodes
+// for Later, and any other personal playlists added via the YT Music web app.
+// This is a read-only library query, NOT a play action, so it does not touch
+// the Denon or join any group.
+router.get('/speakers/playlists', async (req, res) => {
+  try {
+    const libraryResult = await callService(
+      'music_assistant',
+      'get_library',
+      {
+        config_entry_id: config.musicAssistant.configEntryId,
+        media_type: 'playlist',
+        limit: 50,
+        order_by: 'name',
+      },
+      { returnResponse: true }
+    );
+
+    const payload = libraryResult?.service_response ?? libraryResult ?? {};
+    const items = payload?.items ?? [];
+
+    const playlists = items
+      .filter((item) => item?.uri && item?.name)
+      .map((item) => ({ name: item.name, uri: item.uri }));
+
+    res.json({ ok: true, playlists });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: PLAY A SPECIFIC SYNCED PLAYLIST ──
+// body: { uri: 'library://playlist/12' }
+router.post('/speakers/group-play-playlist', async (req, res) => {
+  try {
+    const { uri } = req.body;
+    if (!uri) {
+      return res.status(400).json({ error: 'uri is required' });
+    }
+
+    await prepAndJoinGroup();
+
+    await callService('music_assistant', 'play_media', {
+      entity_id: config.entities.massHomeTheater,
+      media_id: uri,
+      media_type: 'playlist',
+      enqueue: 'replace',
+    });
+
+    res.json({ ok: true, played: uri });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
