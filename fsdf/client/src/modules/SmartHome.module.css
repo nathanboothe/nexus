@@ -1,0 +1,28 @@
+.subNav {
+  display: flex;
+  gap: 8px;
+  padding: 16px 16px 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.subNavBtn,
+.subNavActive {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #322d24;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.subNavBtn {
+  background: transparent;
+  color: #8a8378;
+}
+
+.subNavActive {
+  background: #1c1a15;
+  color: #e3a857;
+  border-color: #c99a4a;
+}
