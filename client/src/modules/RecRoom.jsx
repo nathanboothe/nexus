@@ -44,8 +44,14 @@ export default function RecRoom() {
   const [musicError, setMusicError] = useState('');
   const [lastPlayed, setLastPlayed] = useState('');
 
+  const [playlists, setPlaylists] = useState([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState('');
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
+  const [playlistError, setPlaylistError] = useState('');
+
   useEffect(() => {
     refreshDenon();
+    loadPlaylists();
   }, []);
 
   function flash(msg) {
@@ -118,11 +124,11 @@ export default function RecRoom() {
   }
 
   // ── MUSIC ASSISTANT / WHOLE-HOME AUDIO ──────────────────────────────────
-  // Calls the group-search / group-favorites routes in recroom.js, which
-  // switch the Denon to HEOS Music, join Kitchen/Living Room/Loft/Home
-  // Theater into one Music Assistant group, then play. This takes several
-  // seconds (Denon input switch + join delay), so isGrouping drives a
-  // disabled/loading state rather than assuming it's instant.
+  // Calls the group-search / group-favorites / group-play-playlist routes in
+  // recroom.js, which switch the Denon to HEOS Music, join Kitchen/Living
+  // Room/Loft/Home Theater into one Music Assistant group, then play. This
+  // takes several seconds (Denon input switch + join delay), so isGrouping
+  // drives a disabled/loading state rather than assuming it's instant.
   async function playSearch() {
     if (!musicQuery.trim()) return;
     setMusicError('');
@@ -161,6 +167,44 @@ export default function RecRoom() {
     if (e.key === 'Enter') {
       e.preventDefault();
       playSearch();
+    }
+  }
+
+  // ── SYNCED PLAYLISTS (pulled from Music Assistant's library) ───────────
+  // Read-only library query via music_assistant.get_library — does not touch
+  // the Denon or join any group, so it's safe to call on page load and after
+  // adding a new playlist in the YT Music web app.
+  async function loadPlaylists() {
+    setIsLoadingPlaylists(true);
+    setPlaylistError('');
+    try {
+      const result = await api('/recroom/speakers/playlists');
+      const list = result?.playlists || [];
+      setPlaylists(list);
+      if (list.length && !selectedPlaylist) {
+        setSelectedPlaylist(list[0].uri);
+      }
+    } catch (err) {
+      setPlaylistError(err.message);
+    } finally {
+      setIsLoadingPlaylists(false);
+    }
+  }
+
+  async function playSelectedPlaylist() {
+    if (!selectedPlaylist) return;
+    setMusicError('');
+    setIsGrouping(true);
+    try {
+      await api('/recroom/speakers/group-play-playlist', 'POST', { uri: selectedPlaylist });
+      const match = playlists.find((p) => p.uri === selectedPlaylist);
+      setLastPlayed(match?.name || 'Selected playlist');
+      flash(`Playing: ${match?.name || 'playlist'}`);
+    } catch (err) {
+      setMusicError(err.message);
+      flash('Music: error — see details below');
+    } finally {
+      setIsGrouping(false);
     }
   }
 
@@ -213,6 +257,7 @@ export default function RecRoom() {
           Groups Kitchen, Living Room, Loft, and Home Theater and plays from YouTube Music.
           Switching input and joining the group takes a few seconds.
         </p>
+
         <div className={styles.musicRow}>
           <input
             type="text"
@@ -231,11 +276,50 @@ export default function RecRoom() {
             {isGrouping ? 'Working...' : 'Search & Play'}
           </button>
         </div>
+
         <div className={styles.grid}>
           <button className={styles.btn} onClick={playLikedMusic} disabled={isGrouping}>
             {isGrouping ? 'Working...' : '▶ Play Liked Music'}
           </button>
         </div>
+
+        <h3>Synced Playlists</h3>
+        <div className={styles.musicRow}>
+          <select
+            className={styles.musicSelect}
+            value={selectedPlaylist}
+            onChange={(e) => setSelectedPlaylist(e.target.value)}
+            disabled={isGrouping || isLoadingPlaylists || !playlists.length}
+          >
+            {!playlists.length && <option value="">No playlists loaded</option>}
+            {playlists.map((p) => (
+              <option key={p.uri} value={p.uri}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <button
+            className={styles.btn}
+            onClick={playSelectedPlaylist}
+            disabled={isGrouping || !selectedPlaylist}
+          >
+            {isGrouping ? 'Working...' : 'Play'}
+          </button>
+          <button
+            className={styles.btn}
+            onClick={loadPlaylists}
+            disabled={isLoadingPlaylists}
+            title="Reload if you just added a playlist in YT Music"
+          >
+            {isLoadingPlaylists ? '...' : '⟳'}
+          </button>
+        </div>
+        {playlistError && (
+          <div className={styles.musicErrorBox}>
+            Couldn't load playlists: {playlistError}
+          </div>
+        )}
+
         {lastPlayed && !musicError && (
           <div className={styles.status}>Now playing: {lastPlayed}</div>
         )}
