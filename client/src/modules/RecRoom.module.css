@@ -1,279 +1,83 @@
 .page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   padding: 16px;
   max-width: 480px;
   margin: 0 auto;
 }
 
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.feedback {
-  font-size: 12px;
-  padding: 5px 12px;
-  background: rgba(29,158,117,0.15);
-  border: 1px solid rgba(29,158,117,0.3);
-  border-radius: 20px;
-  color: var(--green);
-  align-self: center;
-}
-
-/* Device tabs */
-.deviceTabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-}
-
-.deviceTab {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 4px;
-  border-radius: 7px;
-  color: var(--text2);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.deviceTab:hover { color: var(--text); }
-.deviceTabActive {
-  background: var(--surface2);
-  color: var(--text) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-/* Remote layout */
-.remote {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Buttons */
-.btn {
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+.flash {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 8px 16px;
   border-radius: 8px;
+  font-size: 14px;
+  z-index: 100;
+}
+
+.section {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.section h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #ccc;
+}
+
+.section h3 {
+  margin: 16px 0 8px;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.12s;
-  text-align: center;
-}
-.btn:hover { background: var(--surface2); border-color: var(--border2); }
-.btn:active { transform: scale(0.96); }
-
-.btnPower {
-  background: rgba(29,158,117,0.15);
-  border-color: rgba(29,158,117,0.3);
-  color: var(--green);
-}
-.btnPower:hover { background: rgba(29,158,117,0.25); }
-
-.btnPowerOff {
-  background: rgba(192,57,43,0.1) !important;
-  border-color: rgba(192,57,43,0.3) !important;
-  color: var(--red) !important;
-}
-.btnPowerOff:hover { background: rgba(192,57,43,0.2) !important; }
-
-.btnPlay {
-  background: rgba(46,95,163,0.2);
-  border-color: rgba(46,95,163,0.3);
-  color: var(--accent-light);
+  color: #999;
 }
 
-.btnLarge {
-  flex: 1.5;
-}
-
-/* Top row */
-.topRow {
-  display: flex;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  flex-wrap: wrap;
 }
-.topRow .btn { flex: 1; min-width: 70px; }
 
-/* D-pad */
 .dpad {
   display: grid;
-  grid-template-areas:
-    ". up ."
-    "left ok right"
-    ". down .";
-  grid-template-columns: 1fr 1.4fr 1fr;
-  grid-template-rows: 1fr 1.4fr 1fr;
-  gap: 6px;
-  max-width: 240px;
-  margin: 0 auto;
-  width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-width: 220px;
 }
 
-.dpadBtn {
-  background: var(--surface);
-  border: 1px solid var(--border);
+.btn {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #3a3a3a;
   border-radius: 8px;
-  font-size: 16px;
-  color: var(--text);
+  padding: 12px 8px;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.12s;
-  padding: 14px 8px;
+}
+
+.btn:active {
+  background: #3a3a3a;
+}
+
+.status {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.sliderRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-.dpadBtn:hover { background: var(--surface2); }
-.dpadBtn:active { transform: scale(0.94); }
-
-.dpadUp    { grid-area: up; }
-.dpadDown  { grid-area: down; }
-.dpadLeft  { grid-area: left; }
-.dpadRight { grid-area: right; }
-.dpadOk    {
-  grid-area: ok;
-  background: var(--surface2);
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 50%;
+  gap: 12px;
+  margin-top: 12px;
 }
 
-/* Nav row */
-.navRow {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-.navRow .btn { flex: 1; }
-
-/* Playback row */
-.playbackRow {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-}
-.playbackRow .btn { flex: 1; padding: 10px 6px; font-size: 16px; }
-
-/* Volume row */
-.volRow {
-  display: flex;
-  gap: 8px;
-}
-.volRow .btn { flex: 1; }
-
-/* Section */
-.section { }
-
-.sectionLabel {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text3);
-  margin-bottom: 8px;
-}
-
-/* Search row (speaker group search) */
-.searchRow {
-  display: flex;
-  gap: 8px;
-}
-
-.searchInput {
+.sliderRow input[type='range'] {
   flex: 1;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  color: var(--text);
 }
-.searchInput:focus {
-  outline: none;
-  border-color: var(--border2);
-}
-
-/* Apps */
-.appGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.appBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.appBtn:hover { background: var(--surface2); border-color: var(--border2); }
-.appBtn:active { transform: scale(0.95); }
-
-.appIcon { font-size: 22px; }
-.appName { font-size: 10px; color: var(--text2); text-align: center; line-height: 1.2; }
-
-/* Input grid */
-.inputGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.inputBtn {
-  padding: 10px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text2);
-  cursor: pointer;
-  transition: all 0.12s;
-  text-align: center;
-}
-.inputBtn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
-.inputBtn:active { transform: scale(0.96); }
-
-/* Number pad */
-.numpad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  max-width: 240px;
-}
-
-.numBtn {
-  padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.12s;
-  text-align: center;
-}
-.numBtn:hover { background: var(--surface2); }
-.numBtnEmpty { visibility: hidden; }
