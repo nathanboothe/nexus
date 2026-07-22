@@ -119,10 +119,79 @@
   word-break: break-word;
 }
 
-/* ── Append this block to the END of RecRoom.module.css ── */
-/* (If you already appended the previous block from the last change, just add
-   the .musicSelect rule below — the rest already exists.) */
+/* ══════════════════════════════════════════════════════════════════════
+   RecRoom.module.css — CONSOLIDATED addition block.
 
+   If you already pasted earlier "append to RecRoom.module.css" blocks from
+   prior messages in this thread, DELETE those first — this block replaces
+   them entirely (it includes everything from before plus the new grid
+   layout and D-pad rules). Paste this whole block at the END of the file.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Page-level 2-column grid layout ──
+   Collapses to a single column under 700px so Rec Room stays phone-usable.
+   This OVERRIDES whatever .page currently declares (last rule wins), so it
+   must stay below your original .page rule in the file. */
+.page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 700px) {
+  .page {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+/* ── Google TV D-pad — proper cross layout instead of a flat row ── */
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(3, 60px);
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0.5rem auto 1rem;
+}
+
+.dpadUp {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpadLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpadOk {
+  grid-column: 2;
+  grid-row: 2;
+  font-weight: 600;
+}
+
+.dpadRight {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpadDown {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.dpadSecondary {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Whole-Home Audio ── */
 .hint {
   font-size: 0.85rem;
   opacity: 0.7;
@@ -162,6 +231,14 @@
 
 .musicSelect:disabled {
   opacity: 0.5;
+}
+
+/* Native <select> popup lists ignore most CSS and render with OS colors —
+   without this, option text is light-on-white (invisible) until hover
+   inverts it. Forcing explicit colors on <option> fixes it in Chrome/Edge. */
+.musicSelect option {
+  color: #111111;
+  background: #ffffff;
 }
 
 .musicErrorBox {

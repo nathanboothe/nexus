@@ -26,16 +26,6 @@ const SAMSUNG_COMMANDS = [
   { label: 'Ch -', command: 'channel_down' },
 ];
 
-const NAV_COMMANDS = [
-  { label: '▲', command: 'DPAD_UP' },
-  { label: '◀', command: 'DPAD_LEFT' },
-  { label: 'OK', command: 'DPAD_CENTER' },
-  { label: '▶', command: 'DPAD_RIGHT' },
-  { label: '▼', command: 'DPAD_DOWN' },
-  { label: 'Back', command: 'BACK' },
-  { label: 'Home', command: 'HOME' },
-];
-
 export default function RecRoom() {
   const [flashMsg, setFlashMsg] = useState('');
   const [denonStatus, setDenonStatus] = useState(null);
@@ -124,11 +114,6 @@ export default function RecRoom() {
   }
 
   // ── MUSIC ASSISTANT / WHOLE-HOME AUDIO ──────────────────────────────────
-  // Calls the group-search / group-favorites / group-play-playlist routes in
-  // recroom.js, which switch the Denon to HEOS Music, join Kitchen/Living
-  // Room/Loft/Home Theater into one Music Assistant group, then play. This
-  // takes several seconds (Denon input switch + join delay), so isGrouping
-  // drives a disabled/loading state rather than assuming it's instant.
   async function playSearch() {
     if (!musicQuery.trim()) return;
     setMusicError('');
@@ -170,10 +155,6 @@ export default function RecRoom() {
     }
   }
 
-  // ── SYNCED PLAYLISTS (pulled from Music Assistant's library) ───────────
-  // Read-only library query via music_assistant.get_library — does not touch
-  // the Denon or join any group, so it's safe to call on page load and after
-  // adding a new playlist in the YT Music web app.
   async function loadPlaylists() {
     setIsLoadingPlaylists(true);
     setPlaylistError('');
@@ -212,42 +193,60 @@ export default function RecRoom() {
     <div className={styles.page}>
       {flashMsg && <div className={styles.flash}>{flashMsg}</div>}
 
-      <section className={styles.section}>
-        <h2>Samsung TV</h2>
-        <div className={styles.grid}>
-          {SAMSUNG_COMMANDS.map((c) => (
-            <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
-              {c.label}
-            </button>
-          ))}
+      {/* ── GOOGLE TV — full width ── */}
+      <section className={`${styles.section} ${styles.fullWidth}`}>
+        <h2>Google TV</h2>
+        <div className={styles.dpad}>
+          <button
+            className={`${styles.btn} ${styles.dpadUp}`}
+            onClick={() => googleTvNav('DPAD_UP')}
+            aria-label="Up"
+          >
+            ▲
+          </button>
+          <button
+            className={`${styles.btn} ${styles.dpadLeft}`}
+            onClick={() => googleTvNav('DPAD_LEFT')}
+            aria-label="Left"
+          >
+            ◀
+          </button>
+          <button
+            className={`${styles.btn} ${styles.dpadOk}`}
+            onClick={() => googleTvNav('DPAD_CENTER')}
+          >
+            OK
+          </button>
+          <button
+            className={`${styles.btn} ${styles.dpadRight}`}
+            onClick={() => googleTvNav('DPAD_RIGHT')}
+            aria-label="Right"
+          >
+            ▶
+          </button>
+          <button
+            className={`${styles.btn} ${styles.dpadDown}`}
+            onClick={() => googleTvNav('DPAD_DOWN')}
+            aria-label="Down"
+          >
+            ▼
+          </button>
+        </div>
+        <div className={styles.dpadSecondary}>
+          <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
+          <button className={styles.btn} onClick={() => googleTvNav('HOME')}>Home</button>
         </div>
       </section>
 
+      {/* ── ROW: Streaming Apps | Whole-Home Audio ── */}
       <section className={styles.section}>
-        <h2>Denon AVR</h2>
-        {denonStatus && (
-          <div className={styles.status}>
-            Power: {denonStatus.power ?? '—'} · Input: {denonStatus.input ?? '—'} · Vol:{' '}
-            {denonStatus.volume ?? '—'} · Mute: {denonStatus.mute ?? '—'}
-          </div>
-        )}
+        <h2>Streaming Apps</h2>
         <div className={styles.grid}>
-          <button className={styles.btn} onClick={() => denonPower(true)}>Power On</button>
-          <button className={styles.btn} onClick={() => denonPower(false)}>Standby</button>
-          <button className={styles.btn} onClick={() => denonMute(true)}>Mute</button>
-          <button className={styles.btn} onClick={() => denonMute(false)}>Unmute</button>
-        </div>
-        <div className={styles.sliderRow}>
-          <label htmlFor="denon-vol">Volume</label>
-          <input
-            id="denon-vol"
-            type="range"
-            min="0"
-            max="98"
-            defaultValue={denonStatus?.volume ?? 30}
-            onMouseUp={(e) => denonVolume(Number(e.target.value))}
-            onTouchEnd={(e) => denonVolume(Number(e.target.value))}
-          />
+          {STREAMING_APPS.map((app) => (
+            <button key={app.name} className={styles.btn} onClick={() => launchApp(app)}>
+              {app.name}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -330,22 +329,43 @@ export default function RecRoom() {
         )}
       </section>
 
+      {/* ── ROW: Samsung TV | Denon AVR ── */}
       <section className={styles.section}>
-        <h2>Google TV</h2>
-        <div className={styles.dpad}>
-          {NAV_COMMANDS.map((c) => (
-            <button key={c.command} className={styles.btn} onClick={() => googleTvNav(c.command)}>
+        <h2>Samsung TV</h2>
+        <div className={styles.grid}>
+          {SAMSUNG_COMMANDS.map((c) => (
+            <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
               {c.label}
             </button>
           ))}
         </div>
-        <h3>Streaming Apps</h3>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Denon AVR</h2>
+        {denonStatus && (
+          <div className={styles.status}>
+            Power: {denonStatus.power ?? '—'} · Input: {denonStatus.input ?? '—'} · Vol:{' '}
+            {denonStatus.volume ?? '—'} · Mute: {denonStatus.mute ?? '—'}
+          </div>
+        )}
         <div className={styles.grid}>
-          {STREAMING_APPS.map((app) => (
-            <button key={app.name} className={styles.btn} onClick={() => launchApp(app)}>
-              {app.name}
-            </button>
-          ))}
+          <button className={styles.btn} onClick={() => denonPower(true)}>Power On</button>
+          <button className={styles.btn} onClick={() => denonPower(false)}>Standby</button>
+          <button className={styles.btn} onClick={() => denonMute(true)}>Mute</button>
+          <button className={styles.btn} onClick={() => denonMute(false)}>Unmute</button>
+        </div>
+        <div className={styles.sliderRow}>
+          <label htmlFor="denon-vol">Volume</label>
+          <input
+            id="denon-vol"
+            type="range"
+            min="0"
+            max="98"
+            defaultValue={denonStatus?.volume ?? 30}
+            onMouseUp={(e) => denonVolume(Number(e.target.value))}
+            onTouchEnd={(e) => denonVolume(Number(e.target.value))}
+          />
         </div>
       </section>
     </div>
