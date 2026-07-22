@@ -39,6 +39,10 @@ const NAV_COMMANDS = [
 export default function RecRoom() {
   const [flashMsg, setFlashMsg] = useState('');
   const [denonStatus, setDenonStatus] = useState(null);
+  const [musicQuery, setMusicQuery] = useState('');
+  const [isGrouping, setIsGrouping] = useState(false);
+  const [musicError, setMusicError] = useState('');
+  const [lastPlayed, setLastPlayed] = useState('');
 
   useEffect(() => {
     refreshDenon();
@@ -113,6 +117,53 @@ export default function RecRoom() {
     }
   }
 
+  // ── MUSIC ASSISTANT / WHOLE-HOME AUDIO ──────────────────────────────────
+  // Calls the group-search / group-favorites routes in recroom.js, which
+  // switch the Denon to HEOS Music, join Kitchen/Living Room/Loft/Home
+  // Theater into one Music Assistant group, then play. This takes several
+  // seconds (Denon input switch + join delay), so isGrouping drives a
+  // disabled/loading state rather than assuming it's instant.
+  async function playSearch() {
+    if (!musicQuery.trim()) return;
+    setMusicError('');
+    setIsGrouping(true);
+    try {
+      const result = await api('/recroom/speakers/group-search', 'POST', {
+        query: musicQuery.trim(),
+      });
+      setLastPlayed(result?.played || musicQuery.trim());
+      flash(`Playing: ${musicQuery.trim()}`);
+      setMusicQuery('');
+    } catch (err) {
+      setMusicError(err.message);
+      flash('Music: error — see details below');
+    } finally {
+      setIsGrouping(false);
+    }
+  }
+
+  async function playLikedMusic() {
+    setMusicError('');
+    setIsGrouping(true);
+    try {
+      await api('/recroom/speakers/group-favorites', 'POST');
+      setLastPlayed('Liked Music (YouTube Music)');
+      flash('Playing Liked Music');
+    } catch (err) {
+      setMusicError(err.message);
+      flash('Music: error — see details below');
+    } finally {
+      setIsGrouping(false);
+    }
+  }
+
+  function handleMusicKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      playSearch();
+    }
+  }
+
   return (
     <div className={styles.page}>
       {flashMsg && <div className={styles.flash}>{flashMsg}</div>}
@@ -154,6 +205,45 @@ export default function RecRoom() {
             onTouchEnd={(e) => denonVolume(Number(e.target.value))}
           />
         </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Whole-Home Audio</h2>
+        <p className={styles.hint}>
+          Groups Kitchen, Living Room, Loft, and Home Theater and plays from YouTube Music.
+          Switching input and joining the group takes a few seconds.
+        </p>
+        <div className={styles.musicRow}>
+          <input
+            type="text"
+            className={styles.musicInput}
+            placeholder="Search a song or artist..."
+            value={musicQuery}
+            onChange={(e) => setMusicQuery(e.target.value)}
+            onKeyDown={handleMusicKeyDown}
+            disabled={isGrouping}
+          />
+          <button
+            className={styles.btn}
+            onClick={playSearch}
+            disabled={isGrouping || !musicQuery.trim()}
+          >
+            {isGrouping ? 'Working...' : 'Search & Play'}
+          </button>
+        </div>
+        <div className={styles.grid}>
+          <button className={styles.btn} onClick={playLikedMusic} disabled={isGrouping}>
+            {isGrouping ? 'Working...' : '▶ Play Liked Music'}
+          </button>
+        </div>
+        {lastPlayed && !musicError && (
+          <div className={styles.status}>Now playing: {lastPlayed}</div>
+        )}
+        {musicError && (
+          <div className={styles.musicErrorBox}>
+            Playback failed: {musicError}
+          </div>
+        )}
       </section>
 
       <section className={styles.section}>
