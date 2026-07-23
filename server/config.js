@@ -22,6 +22,16 @@ export default {
     massLoft: 'media_player.loft_speaker_2',
   },
 
+  // Denon source_list values (confirmed from HA Developer Tools > States for
+  // media_player.home_theater_2). Must match exactly — the Denon API takes
+  // these as literal strings via media_player.select_source.
+  denonSources: {
+    tv: 'TV Audio',
+    xbox: 'XBOX',
+    ps5: 'PS5',
+    switch2: 'Switch 2',
+  },
+
   musicAssistant: {
     configEntryId: '01KR1SAXN6ZQNPY23F611HS081',
     likedMusicUri: 'https://music.youtube.com/playlist?list=LM',

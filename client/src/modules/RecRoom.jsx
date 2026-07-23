@@ -2,19 +2,27 @@ import { useState, useEffect } from 'react';
 import api from '../api.js';
 import styles from './RecRoom.module.css';
 
+// Denon source_list values, confirmed from HA Developer Tools > States for
+// media_player.home_theater_2. Must match exactly.
+const DENON_SOURCE_TV = 'TV Audio';
+const DENON_SOURCE_XBOX = 'XBOX';
+const DENON_SOURCE_PS5 = 'PS5';
+const DENON_SOURCE_SWITCH2 = 'Switch 2';
+
+// Simple Icons CDN (https://simpleicons.org) — free brand icon SVGs by slug.
+// A couple of newer/rebranded services (Max, Peacock, Paramount+) may not have
+// a perfectly matching slug; the <img onError> fallback below swaps to a text
+// label if a given logo fails to load, so nothing breaks visually either way.
 const STREAMING_APPS = [
-  { name: 'Netflix', activity: 'com.netflix.ninja/.MainActivity' },
-  { name: 'YouTube', activity: 'com.google.android.youtube.tv/.MainActivity' },
-  { name: 'Disney+', activity: 'com.disney.disneyplus/.MainActivity' },
-  { name: 'Max', activity: 'com.wbd.stream/com.wbd.beam.BeamActivity' },
-  { name: 'Hulu', activity: 'com.hulu.livingroomplus/.MainActivity' },
-  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom/com.amazon.ignition.IgnitionActivity' },
-  { name: 'Plex', activity: 'com.plexapp.android/.MainActivity' },
-  { name: 'Spotify', activity: 'com.spotify.tv.android/.MainActivity' },
-  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv/.MainActivity' },
-  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid/.MainActivity' },
-  { name: 'Paramount+', activity: 'com.cbs.ott/.MainActivity' },
-  { name: 'ESPN', activity: 'com.espn.score_and_schedule/.MainActivity' },
+  { name: 'Netflix', activity: 'com.netflix.ninja/.MainActivity', logo: 'netflix' },
+  { name: 'YouTube', activity: 'com.google.android.youtube.tv/.MainActivity', logo: 'youtube' },
+  { name: 'Disney+', activity: 'com.disney.disneyplus/.MainActivity', logo: 'disneyplus' },
+  { name: 'Max', activity: 'com.wbd.stream/com.wbd.beam.BeamActivity', logo: 'hbomax' },
+  { name: 'Hulu', activity: 'com.hulu.livingroomplus/.MainActivity', logo: 'hulu' },
+  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom/com.amazon.ignition.IgnitionActivity', logo: 'primevideo' },
+  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv/.MainActivity', logo: 'appletv' },
+  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid/.MainActivity', logo: 'peacock' },
+  { name: 'Paramount+', activity: 'com.cbs.ott/.MainActivity', logo: 'paramountplus' },
 ];
 
 const SAMSUNG_COMMANDS = [
@@ -25,6 +33,31 @@ const SAMSUNG_COMMANDS = [
   { label: 'Ch +', command: 'channel_up' },
   { label: 'Ch -', command: 'channel_down' },
 ];
+
+// Shared volume slider — used in both the Entertainment System card and the
+// Denon AVR card so behavior stays identical in both places.
+function VolumeSlider({ denonStatus, onChange }) {
+  return (
+    <div className={styles.sliderRow}>
+      <label htmlFor="denon-vol">Volume</label>
+      <input
+        id="denon-vol"
+        type="range"
+        min="0"
+        max="98"
+        defaultValue={denonStatus?.volume ?? 30}
+        onMouseUp={(e) => onChange(Number(e.target.value))}
+        onTouchEnd={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
+  );
+}
+
+function handleLogoError(e) {
+  e.currentTarget.style.display = 'none';
+  const fallback = e.currentTarget.nextSibling;
+  if (fallback) fallback.style.display = 'inline';
+}
 
 export default function RecRoom() {
   const [flashMsg, setFlashMsg] = useState('');
@@ -38,6 +71,13 @@ export default function RecRoom() {
   const [selectedPlaylist, setSelectedPlaylist] = useState('');
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
   const [playlistError, setPlaylistError] = useState('');
+
+  // Best-effort local tracking of TV power. Broadlink IR has no read-back
+  // state, so unlike the Denon (which reports real state from HA), this is
+  // only as accurate as what the app has sent. It's updated whenever the
+  // individual Samsung Power button or the master toggle below fires.
+  const [tvOn, setTvOn] = useState(false);
+  const [isTogglingAll, setIsTogglingAll] = useState(false);
 
   useEffect(() => {
     refreshDenon();
@@ -65,6 +105,11 @@ export default function RecRoom() {
     } catch (err) {
       flash(`Error: ${err.message}`);
     }
+  }
+
+  async function samsungPowerButton() {
+    await samsungCommand('power');
+    setTvOn((prev) => !prev);
   }
 
   async function googleTvNav(command) {
@@ -110,6 +155,46 @@ export default function RecRoom() {
       refreshDenon();
     } catch (err) {
       flash(`Error: ${err.message}`);
+    }
+  }
+
+  async function denonInput(source, label) {
+    try {
+      await api('/denon/input', 'POST', { input: source });
+      flash(`Denon input: ${label}`);
+      refreshDenon();
+    } catch (err) {
+      flash(`Error: ${err.message}`);
+    }
+  }
+
+  // ── MASTER TOGGLE ─────────────────────────────────────────────────────────
+  // Direction is decided by the Denon's real reported state (reliable, from
+  // HA). The TV has no real state, so it's only toggled when the locally
+  // tracked tvOn disagrees with the target direction — this keeps the TV from
+  // being double-toggled if it's already in the right state.
+  async function toggleEverything() {
+    setIsTogglingAll(true);
+    try {
+      const denonIsOn = denonStatus?.power === 'on';
+      const turningOn = !denonIsOn;
+
+      await denonPower(turningOn);
+
+      if (tvOn !== turningOn) {
+        await samsungCommand('power');
+        setTvOn(turningOn);
+      }
+
+      if (turningOn) {
+        await denonInput(DENON_SOURCE_TV, 'TV');
+      }
+
+      flash(turningOn ? 'Entertainment System: On' : 'Entertainment System: Off');
+    } catch (err) {
+      flash(`Error: ${err.message}`);
+    } finally {
+      setIsTogglingAll(false);
     }
   }
 
@@ -193,9 +278,33 @@ export default function RecRoom() {
     <div className={styles.page}>
       {flashMsg && <div className={styles.flash}>{flashMsg}</div>}
 
-      {/* ── GOOGLE TV — full width ── */}
+      {/* ── ENTERTAINMENT SYSTEM — full width ── */}
       <section className={`${styles.section} ${styles.fullWidth}`}>
-        <h2>Google TV</h2>
+        <h2>Entertainment System</h2>
+
+        <div className={styles.grid}>
+          <button
+            className={styles.btn}
+            onClick={toggleEverything}
+            disabled={isTogglingAll}
+          >
+            {isTogglingAll
+              ? 'Working...'
+              : denonStatus?.power === 'on'
+              ? '⏻ Turn Everything Off'
+              : '⏻ Turn Everything On'}
+          </button>
+          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_XBOX, 'Xbox')}>
+            Play Xbox
+          </button>
+          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_PS5, 'PS5')}>
+            Play PS5
+          </button>
+          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_SWITCH2, 'Switch 2')}>
+            Play Switch 2
+          </button>
+        </div>
+
         <div className={styles.dpad}>
           <button
             className={`${styles.btn} ${styles.dpadUp}`}
@@ -236,6 +345,8 @@ export default function RecRoom() {
           <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
           <button className={styles.btn} onClick={() => googleTvNav('HOME')}>Home</button>
         </div>
+
+        <VolumeSlider denonStatus={denonStatus} onChange={denonVolume} />
       </section>
 
       {/* ── ROW: Streaming Apps | Whole-Home Audio ── */}
@@ -243,8 +354,20 @@ export default function RecRoom() {
         <h2>Streaming Apps</h2>
         <div className={styles.grid}>
           {STREAMING_APPS.map((app) => (
-            <button key={app.name} className={styles.btn} onClick={() => launchApp(app)}>
-              {app.name}
+            <button
+              key={app.name}
+              className={styles.btn}
+              onClick={() => launchApp(app)}
+              aria-label={app.name}
+              title={app.name}
+            >
+              <img
+                src={`https://cdn.simpleicons.org/${app.logo}`}
+                alt={app.name}
+                onError={handleLogoError}
+                style={{ width: '28px', height: '28px', display: 'block' }}
+              />
+              <span style={{ display: 'none' }}>{app.name}</span>
             </button>
           ))}
         </div>
@@ -333,11 +456,17 @@ export default function RecRoom() {
       <section className={styles.section}>
         <h2>Samsung TV</h2>
         <div className={styles.grid}>
-          {SAMSUNG_COMMANDS.map((c) => (
-            <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
-              {c.label}
-            </button>
-          ))}
+          {SAMSUNG_COMMANDS.map((c) =>
+            c.command === 'power' ? (
+              <button key={c.command} className={styles.btn} onClick={samsungPowerButton}>
+                {c.label}
+              </button>
+            ) : (
+              <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
+                {c.label}
+              </button>
+            )
+          )}
         </div>
       </section>
 
@@ -355,18 +484,7 @@ export default function RecRoom() {
           <button className={styles.btn} onClick={() => denonMute(true)}>Mute</button>
           <button className={styles.btn} onClick={() => denonMute(false)}>Unmute</button>
         </div>
-        <div className={styles.sliderRow}>
-          <label htmlFor="denon-vol">Volume</label>
-          <input
-            id="denon-vol"
-            type="range"
-            min="0"
-            max="98"
-            defaultValue={denonStatus?.volume ?? 30}
-            onMouseUp={(e) => denonVolume(Number(e.target.value))}
-            onTouchEnd={(e) => denonVolume(Number(e.target.value))}
-          />
-        </div>
+        <VolumeSlider denonStatus={denonStatus} onChange={denonVolume} />
       </section>
     </div>
   );
