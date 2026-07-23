@@ -281,12 +281,12 @@ function ReadingDisplay({ entity }) {
 // matching the pattern your other routers use — adjust if that's wrong.
 function CameraCard({ entity }) {
   const [live, setLive] = useState(false);
-  const [src, setSrc] = useState(`/api/homeassistant/camera/${entity.entity_id}?t=${Date.now()}`);
+  const [src, setSrc] = useState(`/api/ha/camera/${entity.entity_id}?t=${Date.now()}`);
 
   useEffect(() => {
     if (!live) return;
     const id = setInterval(() => {
-      setSrc(`/api/homeassistant/camera/${entity.entity_id}?t=${Date.now()}`);
+      setSrc(`/api/ha/camera/${entity.entity_id}?t=${Date.now()}`);
     }, 2000);
     return () => clearInterval(id);
   }, [live, entity.entity_id]);
@@ -396,10 +396,10 @@ export default function SmartHome() {
 
   const loadHaStates = useCallback(async () => {
     try {
-      const states = await api('/homeassistant/states');
+      const states = await api('/ha/states');
       if (!Array.isArray(states)) {
         setHaStates([]);
-        setHaError(`Unexpected response from /homeassistant/states: ${JSON.stringify(states).slice(0, 200)}`);
+        setHaError(`Unexpected response from /ha/states: ${JSON.stringify(states).slice(0, 200)}`);
         return;
       }
       setHaStates(states);
@@ -418,7 +418,7 @@ export default function SmartHome() {
 
   async function handleAction(domain, service, entityId, data = {}) {
     try {
-      await api('/homeassistant/service', 'POST', {
+      await api('/ha/service', 'POST', {
         domain,
         service,
         data: { entity_id: entityId, ...data },
