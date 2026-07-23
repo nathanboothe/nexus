@@ -32,6 +32,39 @@
   color: #ccc;
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subsection {
+  margin-top: 16px;
+}
+
+.subsection:first-child {
+  margin-top: 0;
+}
+
+.subsection h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -47,6 +80,19 @@
   gap: 8px;
 }
 
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .cardName {
   font-size: 13px;
   color: #eee;
@@ -54,7 +100,33 @@
 
 .cardControls {
   display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reading {
+  font-size: 13px;
+  color: #bbb;
+}
+
+.select {
+  background: #3a3a3a;
+  color: #fff;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.cameraImg {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+  margin-bottom: 6px;
+  background: #111;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 .btn {
