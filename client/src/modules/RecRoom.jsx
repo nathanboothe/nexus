@@ -288,11 +288,7 @@ export default function RecRoom() {
             onClick={toggleEverything}
             disabled={isTogglingAll}
           >
-            {isTogglingAll
-              ? 'Working...'
-              : denonStatus?.power === 'on'
-              ? '⏻ Turn Everything Off'
-              : '⏻ Turn Everything On'}
+            {isTogglingAll ? 'Working...' : '⏻ Power'}
           </button>
           <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_XBOX, 'Xbox')}>
             Play Xbox
