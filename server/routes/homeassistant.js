@@ -93,4 +93,31 @@ router.get('/camera/:entityId', async (req, res) => {
   }
 });
 
+// ── MEDIA ARTWORK ── proxies a media_player's entity_picture (album art)
+// the same way the camera route proxies camera_proxy — the browser never
+// needs its own HA token, and this also works for entity_picture URLs that
+// are HA-relative paths requiring auth, not just external ones.
+router.get('/media-thumbnail/:entityId', async (req, res) => {
+  try {
+    const state = await getState(req.params.entityId);
+    const picturePath = state.attributes?.entity_picture;
+    if (!picturePath) {
+      return res.status(404).json({ error: 'No entity_picture on this entity right now' });
+    }
+    const fullUrl = picturePath.startsWith('http') ? picturePath : `${HA_URL}${picturePath}`;
+    const response = await fetch(fullUrl, {
+      headers: { Authorization: `Bearer ${HA_TOKEN}` },
+    });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: `HA returned ${response.status}` });
+    }
+    res.set('Content-Type', response.headers.get('content-type') || 'image/jpeg');
+    res.set('Cache-Control', 'no-store');
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.send(buffer);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

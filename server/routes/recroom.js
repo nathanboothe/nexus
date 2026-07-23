@@ -15,6 +15,28 @@ const MASS_GROUP = [
   config.entities.massLoft,
 ];
 
+// Keyed the same way config.entities is, so the frontend can send which
+// speakers it wants included without needing to know raw entity IDs.
+const MASS_GROUP_MAP = {
+  massHomeTheater: config.entities.massHomeTheater,
+  massKitchen: config.entities.massKitchen,
+  massLivingRoom: config.entities.massLivingRoom,
+  massLoft: config.entities.massLoft,
+};
+
+// body.members is an array of keys from MASS_GROUP_MAP (e.g. ['massHomeTheater',
+// 'massKitchen']). Home Theater is always included since it's the group leader
+// every play_media call targets — omitting it would break playback entirely,
+// not just skip that speaker. Empty/missing members = everyone (old behavior).
+function resolveMembers(memberKeys) {
+  if (!Array.isArray(memberKeys) || !memberKeys.length) {
+    return MASS_GROUP;
+  }
+  const keys = new Set(memberKeys);
+  keys.add('massHomeTheater');
+  return [...keys].map((k) => MASS_GROUP_MAP[k]).filter(Boolean);
+}
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ── SAMSUNG TV (Broadlink IR via HA) ────────────────────────────────────────
@@ -69,7 +91,7 @@ router.post('/googletv/launch', async (req, res) => {
 });
 
 // ── SPEAKER GROUPING: helper to switch Denon to HEOS Music + join the group ──
-async function prepAndJoinGroup() {
+async function prepAndJoinGroup(members) {
   await callService('media_player', 'select_source', {
     entity_id: DENON_ENTITY,
     source: 'HEOS Music',
@@ -77,7 +99,7 @@ async function prepAndJoinGroup() {
   await delay(3000);
   await callService('media_player', 'join', {
     entity_id: config.entities.massHomeTheater,
-    group_members: MASS_GROUP,
+    group_members: members,
   });
 }
 
@@ -85,12 +107,12 @@ async function prepAndJoinGroup() {
 // body: { query: 'Fear NF' }
 router.post('/speakers/group-search', async (req, res) => {
   try {
-    const { query } = req.body;
+    const { query, members } = req.body;
     if (!query || !query.trim()) {
       return res.status(400).json({ error: 'query is required' });
     }
 
-    await prepAndJoinGroup();
+    await prepAndJoinGroup(resolveMembers(members));
 
     const searchResult = await callService(
       'music_assistant',
@@ -128,7 +150,7 @@ router.post('/speakers/group-search', async (req, res) => {
 // ── SPEAKER GROUP: PLAY YOUTUBE MUSIC LIKED SONGS ──
 router.post('/speakers/group-favorites', async (req, res) => {
   try {
-    await prepAndJoinGroup();
+    await prepAndJoinGroup(resolveMembers(req.body?.members));
 
     await callService('music_assistant', 'play_media', {
       entity_id: config.entities.massHomeTheater,
@@ -180,12 +202,12 @@ router.get('/speakers/playlists', async (req, res) => {
 // body: { uri: 'library://playlist/12' }
 router.post('/speakers/group-play-playlist', async (req, res) => {
   try {
-    const { uri } = req.body;
+    const { uri, members } = req.body;
     if (!uri) {
       return res.status(400).json({ error: 'uri is required' });
     }
 
-    await prepAndJoinGroup();
+    await prepAndJoinGroup(resolveMembers(members));
 
     await callService('music_assistant', 'play_media', {
       entity_id: config.entities.massHomeTheater,
@@ -195,6 +217,21 @@ router.post('/speakers/group-play-playlist', async (req, res) => {
     });
 
     res.json({ ok: true, played: uri });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: STOP ──
+// Stops playback on the group leader. Since Music Assistant playback is
+// driven through Home Theater regardless of which speakers are joined,
+// stopping the leader stops the shared session for everyone in the group.
+router.post('/speakers/stop', async (_req, res) => {
+  try {
+    await callService('media_player', 'media_stop', {
+      entity_id: config.entities.massHomeTheater,
+    });
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

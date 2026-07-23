@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../api.js';
 import styles from './RecRoom.module.css';
 
@@ -8,6 +8,10 @@ const DENON_SOURCE_TV = 'TV Audio';
 const DENON_SOURCE_XBOX = 'XBOX';
 const DENON_SOURCE_PS5 = 'PS5';
 const DENON_SOURCE_SWITCH2 = 'Switch 2';
+
+// Must match config.js entities.massHomeTheater on the backend — this is the
+// Music Assistant group leader every play/now-playing/album-art call targets.
+const MASS_HOME_THEATER_ID = 'media_player.home_theater_3';
 
 // Simple Icons CDN (https://simpleicons.org) — free brand icon SVGs by slug.
 // A couple of newer/rebranded services (Max, Peacock, Paramount+) may not have
@@ -34,20 +38,51 @@ const SAMSUNG_COMMANDS = [
   { label: 'Ch -', command: 'channel_down' },
 ];
 
+// Speakers that can be toggled in/out of the Whole-Home Audio group. Home
+// Theater isn't listed here — it's the group leader every play_media call
+// targets, so it's always included regardless of these toggles.
+const TOGGLEABLE_SPEAKERS = [
+  { key: 'massKitchen', label: 'Kitchen' },
+  { key: 'massLivingRoom', label: 'Living Room' },
+  { key: 'massLoft', label: 'Loft' },
+];
+
 // Shared volume slider — used in both the Entertainment System card and the
-// Denon AVR card so behavior stays identical in both places.
-function VolumeSlider({ denonStatus, onChange }) {
+// Denon AVR card. Controlled by real Denon state (not defaultValue), so the
+// handle always starts at the actual current volume instead of wherever it
+// last happened to render. While the user is actively dragging, incoming
+// status refreshes are ignored so the slider doesn't jump mid-drag; once
+// they release, the chosen value is sent and the slider re-syncs to
+// whatever HA reports next.
+function VolumeSlider({ id, denonStatus, onChange }) {
+  const [localValue, setLocalValue] = useState(denonStatus?.volume ?? 30);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    if (!isDragging.current && denonStatus?.volume != null) {
+      setLocalValue(denonStatus.volume);
+    }
+  }, [denonStatus?.volume]);
+
+  function commit(value) {
+    isDragging.current = false;
+    onChange(value);
+  }
+
   return (
     <div className={styles.sliderRow}>
-      <label htmlFor="denon-vol">Volume</label>
+      <label htmlFor={id}>Volume</label>
       <input
-        id="denon-vol"
+        id={id}
         type="range"
         min="0"
         max="98"
-        defaultValue={denonStatus?.volume ?? 30}
-        onMouseUp={(e) => onChange(Number(e.target.value))}
-        onTouchEnd={(e) => onChange(Number(e.target.value))}
+        value={localValue}
+        onMouseDown={() => { isDragging.current = true; }}
+        onTouchStart={() => { isDragging.current = true; }}
+        onChange={(e) => setLocalValue(Number(e.target.value))}
+        onMouseUp={(e) => commit(Number(e.target.value))}
+        onTouchEnd={(e) => commit(Number(e.target.value))}
       />
     </div>
   );
@@ -79,9 +114,19 @@ export default function RecRoom() {
   const [tvOn, setTvOn] = useState(false);
   const [isTogglingAll, setIsTogglingAll] = useState(false);
 
+  const [nowPlaying, setNowPlaying] = useState(null);
+  const [speakerSelection, setSpeakerSelection] = useState({
+    massKitchen: true,
+    massLivingRoom: true,
+    massLoft: true,
+  });
+
   useEffect(() => {
     refreshDenon();
     loadPlaylists();
+    refreshNowPlaying();
+    const id = setInterval(refreshNowPlaying, 5000);
+    return () => clearInterval(id);
   }, []);
 
   function flash(msg) {
@@ -93,6 +138,15 @@ export default function RecRoom() {
     try {
       const status = await api('/denon/status');
       setDenonStatus(status);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function refreshNowPlaying() {
+    try {
+      const state = await api(`/ha/state/${MASS_HOME_THEATER_ID}`);
+      setNowPlaying(state);
     } catch (err) {
       console.error(err);
     }
@@ -173,6 +227,8 @@ export default function RecRoom() {
   // HA). The TV has no real state, so it's only toggled when the locally
   // tracked tvOn disagrees with the target direction — this keeps the TV from
   // being double-toggled if it's already in the right state.
+  // Used by both the Power button and the Watch TV button below — they
+  // currently do the exact same thing, just labeled differently.
   async function toggleEverything() {
     setIsTogglingAll(true);
     try {
@@ -199,6 +255,17 @@ export default function RecRoom() {
   }
 
   // ── MUSIC ASSISTANT / WHOLE-HOME AUDIO ──────────────────────────────────
+  function toggleSpeaker(key) {
+    setSpeakerSelection((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function selectedMembers() {
+    const keys = Object.entries(speakerSelection)
+      .filter(([, checked]) => checked)
+      .map(([key]) => key);
+    return ['massHomeTheater', ...keys];
+  }
+
   async function playSearch() {
     if (!musicQuery.trim()) return;
     setMusicError('');
@@ -206,10 +273,12 @@ export default function RecRoom() {
     try {
       const result = await api('/recroom/speakers/group-search', 'POST', {
         query: musicQuery.trim(),
+        members: selectedMembers(),
       });
       setLastPlayed(result?.played || musicQuery.trim());
       flash(`Playing: ${musicQuery.trim()}`);
       setMusicQuery('');
+      setTimeout(refreshNowPlaying, 1500);
     } catch (err) {
       setMusicError(err.message);
       flash('Music: error — see details below');
@@ -222,14 +291,25 @@ export default function RecRoom() {
     setMusicError('');
     setIsGrouping(true);
     try {
-      await api('/recroom/speakers/group-favorites', 'POST');
+      await api('/recroom/speakers/group-favorites', 'POST', { members: selectedMembers() });
       setLastPlayed('Liked Music (YouTube Music)');
       flash('Playing Liked Music');
+      setTimeout(refreshNowPlaying, 1500);
     } catch (err) {
       setMusicError(err.message);
       flash('Music: error — see details below');
     } finally {
       setIsGrouping(false);
+    }
+  }
+
+  async function stopAudio() {
+    try {
+      await api('/recroom/speakers/stop', 'POST');
+      flash('Whole-Home Audio: Stopped');
+      setTimeout(refreshNowPlaying, 500);
+    } catch (err) {
+      flash(`Error: ${err.message}`);
     }
   }
 
@@ -262,10 +342,14 @@ export default function RecRoom() {
     setMusicError('');
     setIsGrouping(true);
     try {
-      await api('/recroom/speakers/group-play-playlist', 'POST', { uri: selectedPlaylist });
+      await api('/recroom/speakers/group-play-playlist', 'POST', {
+        uri: selectedPlaylist,
+        members: selectedMembers(),
+      });
       const match = playlists.find((p) => p.uri === selectedPlaylist);
       setLastPlayed(match?.name || 'Selected playlist');
       flash(`Playing: ${match?.name || 'playlist'}`);
+      setTimeout(refreshNowPlaying, 1500);
     } catch (err) {
       setMusicError(err.message);
       flash('Music: error — see details below');
@@ -273,6 +357,11 @@ export default function RecRoom() {
       setIsGrouping(false);
     }
   }
+
+  const mediaTitle = nowPlaying?.attributes?.media_title;
+  const mediaArtist = nowPlaying?.attributes?.media_artist;
+  const hasArt = !!nowPlaying?.attributes?.entity_picture;
+  const isPlaying = nowPlaying?.state === 'playing';
 
   return (
     <div className={styles.page}>
@@ -282,14 +371,94 @@ export default function RecRoom() {
       <section className={`${styles.section} ${styles.fullWidth}`}>
         <h2>Entertainment System</h2>
 
+        {/* NOTE: no RecRoom.module.css was available, so this row's layout
+            uses inline styles rather than guessed class names. Send the CSS
+            file and this can move into proper module classes. */}
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          {/* LEFT COLUMN: Power + Watch TV */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 130 }}>
+            <button className={styles.btn} onClick={toggleEverything} disabled={isTogglingAll}>
+              {isTogglingAll ? 'Working...' : '⏻ Power'}
+            </button>
+            <button className={styles.btn} onClick={toggleEverything} disabled={isTogglingAll}>
+              {isTogglingAll
+                ? 'Working...'
+                : denonStatus?.power === 'on'
+                ? 'Stop Watch TV'
+                : 'Watch TV'}
+            </button>
+          </div>
+
+          {/* CENTER: Google TV D-pad */}
+          <div style={{ flex: '0 0 auto' }}>
+            <div className={styles.dpad}>
+              <button
+                className={`${styles.btn} ${styles.dpadUp}`}
+                onClick={() => googleTvNav('DPAD_UP')}
+                aria-label="Up"
+              >
+                ▲
+              </button>
+              <button
+                className={`${styles.btn} ${styles.dpadLeft}`}
+                onClick={() => googleTvNav('DPAD_LEFT')}
+                aria-label="Left"
+              >
+                ◀
+              </button>
+              <button
+                className={`${styles.btn} ${styles.dpadOk}`}
+                onClick={() => googleTvNav('DPAD_CENTER')}
+              >
+                OK
+              </button>
+              <button
+                className={`${styles.btn} ${styles.dpadRight}`}
+                onClick={() => googleTvNav('DPAD_RIGHT')}
+                aria-label="Right"
+              >
+                ▶
+              </button>
+              <button
+                className={`${styles.btn} ${styles.dpadDown}`}
+                onClick={() => googleTvNav('DPAD_DOWN')}
+                aria-label="Down"
+              >
+                ▼
+              </button>
+            </div>
+            <div className={styles.dpadSecondary}>
+              <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
+              <button className={styles.btn} onClick={() => googleTvNav('HOME')}>Home</button>
+            </div>
+          </div>
+
+          {/* RIGHT: Streaming apps, 3x3 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: '1 1 220px' }}>
+            {STREAMING_APPS.map((app) => (
+              <button
+                key={app.name}
+                className={styles.btn}
+                onClick={() => launchApp(app)}
+                aria-label={app.name}
+                title={app.name}
+              >
+                <img
+                  src={`https://cdn.simpleicons.org/${app.logo}`}
+                  alt={app.name}
+                  onError={handleLogoError}
+                  style={{ width: '28px', height: '28px', display: 'block' }}
+                />
+                <span style={{ display: 'none' }}>{app.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <VolumeSlider id="ent-vol" denonStatus={denonStatus} onChange={denonVolume} />
+
+        <h3>Play a Console</h3>
         <div className={styles.grid}>
-          <button
-            className={styles.btn}
-            onClick={toggleEverything}
-            disabled={isTogglingAll}
-          >
-            {isTogglingAll ? 'Working...' : '⏻ Power'}
-          </button>
           <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_XBOX, 'Xbox')}>
             Play Xbox
           </button>
@@ -300,81 +469,81 @@ export default function RecRoom() {
             Play Switch 2
           </button>
         </div>
-
-        <div className={styles.dpad}>
-          <button
-            className={`${styles.btn} ${styles.dpadUp}`}
-            onClick={() => googleTvNav('DPAD_UP')}
-            aria-label="Up"
-          >
-            ▲
-          </button>
-          <button
-            className={`${styles.btn} ${styles.dpadLeft}`}
-            onClick={() => googleTvNav('DPAD_LEFT')}
-            aria-label="Left"
-          >
-            ◀
-          </button>
-          <button
-            className={`${styles.btn} ${styles.dpadOk}`}
-            onClick={() => googleTvNav('DPAD_CENTER')}
-          >
-            OK
-          </button>
-          <button
-            className={`${styles.btn} ${styles.dpadRight}`}
-            onClick={() => googleTvNav('DPAD_RIGHT')}
-            aria-label="Right"
-          >
-            ▶
-          </button>
-          <button
-            className={`${styles.btn} ${styles.dpadDown}`}
-            onClick={() => googleTvNav('DPAD_DOWN')}
-            aria-label="Down"
-          >
-            ▼
-          </button>
-        </div>
-        <div className={styles.dpadSecondary}>
-          <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
-          <button className={styles.btn} onClick={() => googleTvNav('HOME')}>Home</button>
-        </div>
-
-        <VolumeSlider denonStatus={denonStatus} onChange={denonVolume} />
       </section>
 
-      {/* ── ROW: Streaming Apps | Whole-Home Audio ── */}
-      <section className={styles.section}>
-        <h2>Streaming Apps</h2>
-        <div className={styles.grid}>
-          {STREAMING_APPS.map((app) => (
-            <button
-              key={app.name}
-              className={styles.btn}
-              onClick={() => launchApp(app)}
-              aria-label={app.name}
-              title={app.name}
-            >
-              <img
-                src={`https://cdn.simpleicons.org/${app.logo}`}
-                alt={app.name}
-                onError={handleLogoError}
-                style={{ width: '28px', height: '28px', display: 'block' }}
-              />
-              <span style={{ display: 'none' }}>{app.name}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className={styles.section}>
+      {/* ── WHOLE-HOME AUDIO — now full width, same as Entertainment System ── */}
+      <section className={`${styles.section} ${styles.fullWidth}`}>
         <h2>Whole-Home Audio</h2>
         <p className={styles.hint}>
-          Groups Kitchen, Living Room, Loft, and Home Theater and plays from YouTube Music.
-          Switching input and joining the group takes a few seconds.
+          Home Theater is always included as the group leader. Toggle the
+          other speakers below before playing something.
         </p>
+
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          {/* Album art */}
+          <div style={{ width: 120, flex: '0 0 auto' }}>
+            {hasArt ? (
+              <img
+                src={`/api/ha/media-thumbnail/${MASS_HOME_THEATER_ID}?t=${nowPlaying?.last_updated || ''}`}
+                alt="Album art"
+                style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', display: 'block' }}
+                onError={(e) => { e.currentTarget.style.opacity = 0.2; }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 8,
+                  background: '#2a2a2a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  color: '#777',
+                  textAlign: 'center',
+                  padding: 8,
+                }}
+              >
+                No album art
+              </div>
+            )}
+          </div>
+
+          {/* Now playing + transport + speaker toggles */}
+          <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <div style={{ fontWeight: 600 }}>{mediaTitle || 'Nothing playing'}</div>
+              {mediaArtist && <div style={{ color: '#999', fontSize: 13 }}>{mediaArtist}</div>}
+            </div>
+
+            <div className={styles.grid}>
+              <button className={styles.btn} onClick={stopAudio} disabled={!isPlaying}>
+                ■ Stop
+              </button>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Speakers in group:</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.6 }}>
+                  <input type="checkbox" checked disabled />
+                  Home Theater (always on)
+                </label>
+                {TOGGLEABLE_SPEAKERS.map((s) => (
+                  <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="checkbox"
+                      checked={speakerSelection[s.key]}
+                      onChange={() => toggleSpeaker(s.key)}
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className={styles.musicRow}>
           <input
@@ -439,7 +608,7 @@ export default function RecRoom() {
         )}
 
         {lastPlayed && !musicError && (
-          <div className={styles.status}>Now playing: {lastPlayed}</div>
+          <div className={styles.status}>Last requested: {lastPlayed}</div>
         )}
         {musicError && (
           <div className={styles.musicErrorBox}>
@@ -480,7 +649,7 @@ export default function RecRoom() {
           <button className={styles.btn} onClick={() => denonMute(true)}>Mute</button>
           <button className={styles.btn} onClick={() => denonMute(false)}>Unmute</button>
         </div>
-        <VolumeSlider denonStatus={denonStatus} onChange={denonVolume} />
+        <VolumeSlider id="denon-vol" denonStatus={denonStatus} onChange={denonVolume} />
       </section>
     </div>
   );
