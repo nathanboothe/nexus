@@ -72,6 +72,85 @@ function deriveRoom(entity) {
   return 'Unassigned';
 }
 
+// Keeps room-grouped sections in a consistent order, with Unassigned last.
+function roomSortKey(a, b) {
+  if (a === 'Unassigned') return 1;
+  if (b === 'Unassigned') return -1;
+  return a.localeCompare(b);
+}
+
+// ── GOVEE LIGHTS ROOM MAPPING ────────────────────────────────────────────
+// Built from the light-domain rows of your HA entity export, so Govee cloud
+// devices land in the same rooms as everything else instead of relying on
+// Govee's own "Room - Fixture" app naming (still used as a fallback below
+// for any device not in this table). Matched case-insensitively against
+// the Govee cloud deviceName.
+const GOVEE_NAME_TO_ROOM = {
+  'back fan bulb 1': 'Rec Room',
+  'back fan bulb 2': 'Rec Room',
+  'back fan bulb 3': 'Rec Room',
+  'back fan bulb 4': 'Rec Room',
+  'back rec room fan': 'Rec Room',
+  'fireplace light': 'Rec Room',
+  'flood lights': 'Backyard',
+  'fridge 1': 'Rec Room',
+  'fridge 2': 'Rec Room',
+  'fridge 3': 'Rec Room',
+  'fridge lights': 'Rec Room',
+  'front fan bulb 1': 'Rec Room',
+  'front fan bulb 2': 'Rec Room',
+  'front fan bulb 3': 'Rec Room',
+  'front fan bulb 4': 'Rec Room',
+  'front porch light 1': 'Entryway',
+  'front porch light 2': 'Entryway',
+  'front rec room fan': 'Rec Room',
+  'grill lights': 'Patio',
+  'left floor lamp': 'Rec Room',
+  'spotlights right': 'Frontyard',
+  'spotlights left': 'Frontyard',
+  'curtain lights': 'Frontyard',
+  'lucas light': "Lucas's Room",
+  'porch light 1': 'Porch',
+  'porch light 2': 'Porch',
+  'porch light 4': 'Porch',
+  'porch light 5': 'Porch',
+  'porch light 7': 'Porch',
+  'porch light 8': 'Porch',
+  'rec room floor lamps': 'Rec Room',
+  'rec room fridge lights': 'Rec Room',
+  'rec room lights': 'Rec Room',
+  'right floor lamp': 'Rec Room',
+  "tyler's air purifier": 'Cottage',
+};
+
+// These three had no area AND no room keyword anywhere in the CSV export —
+// genuinely no location info to go on. Fill in here (or tell me the room
+// and I'll add it) rather than have me guess wrong.
+const GOVEE_ROOM_OVERRIDES = {
+  // 'Deck Lights': 'Backyard',
+  // 'Deck Stairs': 'Backyard',
+  // 'Dog Closet': 'Rec Room',
+};
+
+function deriveGoveeRoom(deviceName) {
+  const name = (deviceName || 'Unknown').trim();
+  if (GOVEE_ROOM_OVERRIDES[name]) return GOVEE_ROOM_OVERRIDES[name];
+
+  const known = GOVEE_NAME_TO_ROOM[name.toLowerCase()];
+  if (known) return known;
+
+  // Legacy Govee-app convention: "Room - Fixture"
+  const parts = name.split(' - ');
+  if (parts.length > 1) return parts[0];
+
+  const haystack = name.toLowerCase();
+  for (const [keyword, room] of ROOM_KEYWORDS) {
+    if (haystack.includes(keyword.replace(/_/g, ' '))) return room;
+  }
+
+  return 'Unassigned';
+}
+
 // ── TYPE / CATEGORY CLASSIFICATION ──────────────────────────────────────────
 const TYPE_LABELS = {
   switch: 'Switches',
@@ -124,11 +203,7 @@ function orderedGroupEntries(grouped, viewMode) {
   if (viewMode === 'type') {
     return TYPE_ORDER.filter((k) => grouped[k]?.length).map((k) => [TYPE_LABELS[k], grouped[k]]);
   }
-  const rooms = Object.keys(grouped).sort((a, b) => {
-    if (a === 'Unassigned') return 1;
-    if (b === 'Unassigned') return -1;
-    return a.localeCompare(b);
-  });
+  const rooms = Object.keys(grouped).sort(roomSortKey);
   return rooms.map((r) => [r, grouped[r]]);
 }
 
@@ -382,8 +457,7 @@ export default function SmartHome() {
   }
 
   const rooms = devices.reduce((acc, d) => {
-    const parts = (d.deviceName || 'Unknown').split(' - ');
-    const label = parts.length > 1 ? parts[0] : 'Unassigned';
+    const label = deriveGoveeRoom(d.deviceName);
     acc[label] = acc[label] || [];
     acc[label].push(d);
     return acc;
@@ -443,7 +517,7 @@ export default function SmartHome() {
       {/* ── LIGHTS (Govee cloud) ── */}
       {error && <div className={styles.error}>{error}</div>}
       {devices.length === 0 && !error && <div className={styles.loading}>Loading devices…</div>}
-      {Object.entries(rooms).map(([room, roomDevices]) => (
+      {Object.entries(rooms).sort(([a], [b]) => roomSortKey(a, b)).map(([room, roomDevices]) => (
         <section key={room} className={styles.section}>
           <h2>{room}</h2>
           <div className={styles.grid}>
