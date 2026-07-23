@@ -1,6 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Component } from 'react';
 import api from '../api.js';
 import styles from './SmartHome.module.css';
+
+// Catches render-time errors in the wrapped section only, so a bad entity
+// shape can't blank the whole page the way it just did.
+class SectionErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error('SmartHome section crashed:', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className={styles.error}>
+          This section hit an error: {this.state.error.message}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Govee cloud API caps at 10,000 requests/day — keep this long
 const GOVEE_POLL_INTERVAL_MS = 300000;
@@ -313,9 +338,15 @@ export default function SmartHome() {
   const loadDevices = useCallback(async () => {
     try {
       const list = await api('/govee/devices');
+      if (!Array.isArray(list)) {
+        setDevices([]);
+        setError(`Unexpected response from /govee/devices: ${JSON.stringify(list).slice(0, 200)}`);
+        return;
+      }
       setDevices(list);
       setError('');
     } catch (err) {
+      setDevices([]);
       setError(err.message);
     }
   }, []);
@@ -366,9 +397,15 @@ export default function SmartHome() {
   const loadHaStates = useCallback(async () => {
     try {
       const states = await api('/homeassistant/states');
+      if (!Array.isArray(states)) {
+        setHaStates([]);
+        setHaError(`Unexpected response from /homeassistant/states: ${JSON.stringify(states).slice(0, 200)}`);
+        return;
+      }
       setHaStates(states);
       setHaError('');
     } catch (err) {
+      setHaStates([]);
       setHaError(err.message);
     }
   }, []);
@@ -432,41 +469,43 @@ export default function SmartHome() {
       ))}
 
       {/* ── ALL DEVICES (Home Assistant, grouped by Room or Type) ── */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h2>All Devices</h2>
-          <div className={styles.headerControls}>
-            <select
-              className={styles.select}
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value)}
-            >
-              <option value="room">Group by Room</option>
-              <option value="type">Group by Type</option>
-            </select>
-            <button className={styles.btn} onClick={loadHaStates} title="Refresh">⟳</button>
-          </div>
-        </div>
-
-        {haError && <div className={styles.error}>{haError}</div>}
-        {!haStates.length && !haError && <div className={styles.loading}>Loading devices…</div>}
-
-        {orderedGroupEntries(grouped, viewMode).map(([label, entities]) => (
-          <div key={label} className={styles.subsection}>
-            <h3>{label}</h3>
-            <div className={styles.grid}>
-              {sortEntities(entities).map((entity) => (
-                <EntityCard
-                  key={entity.entity_id}
-                  entity={entity}
-                  availabilityMap={availabilityMap}
-                  onAction={handleAction}
-                />
-              ))}
+      <SectionErrorBoundary>
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2>All Devices</h2>
+            <div className={styles.headerControls}>
+              <select
+                className={styles.select}
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value)}
+              >
+                <option value="room">Group by Room</option>
+                <option value="type">Group by Type</option>
+              </select>
+              <button className={styles.btn} onClick={loadHaStates} title="Refresh">⟳</button>
             </div>
           </div>
-        ))}
-      </section>
+
+          {haError && <div className={styles.error}>{haError}</div>}
+          {!haStates.length && !haError && <div className={styles.loading}>Loading devices…</div>}
+
+          {orderedGroupEntries(grouped, viewMode).map(([label, entities]) => (
+            <div key={label} className={styles.subsection}>
+              <h3>{label}</h3>
+              <div className={styles.grid}>
+                {sortEntities(entities).map((entity) => (
+                  <EntityCard
+                    key={entity.entity_id}
+                    entity={entity}
+                    availabilityMap={availabilityMap}
+                    onAction={handleAction}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      </SectionErrorBoundary>
     </div>
   );
 }
