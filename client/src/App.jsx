@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import RecRoom from './modules/RecRoom.jsx';
-import SmartHome from './modules/SmartHome.jsx';
+import EntertainmentSystem from './modules/EntertainmentSystem.jsx';
+import WholeHomeAudio from './modules/WholeHomeAudio.jsx';
+import ClimateLighting from './modules/ClimateLighting.jsx';
+import CamerasDevices from './modules/CamerasDevices.jsx';
 import styles from './App.module.css';
 
 function IconMedia(props) {
@@ -13,22 +15,44 @@ function IconMedia(props) {
   );
 }
 
-function IconHome(props) {
+function IconSpeaker(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5 10v10h5v-6h4v6h5V10" />
+      <rect x="5" y="2.5" width="14" height="19" rx="2.5" />
+      <circle cx="12" cy="15.5" r="3.2" />
+      <circle cx="12" cy="7" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconSun(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="4.2" />
+      <path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7" />
+    </svg>
+  );
+}
+
+function IconCamera(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 8.5a1.5 1.5 0 0 1 1.5-1.5h2l1.2-2h8.6l1.2 2h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-9Z" />
+      <circle cx="12" cy="13" r="3.4" />
     </svg>
   );
 }
 
 const TABS = [
-  { id: 'recroom', label: 'Media Controls', Icon: IconMedia },
-  { id: 'smarthome', label: 'Smart Home', Icon: IconHome },
+  { id: 'entertainment', label: 'Entertainment System', Icon: IconMedia, Component: EntertainmentSystem },
+  { id: 'audio', label: 'Whole-Home Audio', Icon: IconSpeaker, Component: WholeHomeAudio },
+  { id: 'climate', label: 'Climate & Lighting', Icon: IconSun, Component: ClimateLighting },
+  { id: 'cameras', label: 'Cameras & Devices', Icon: IconCamera, Component: CamerasDevices },
 ];
 
 export default function App() {
-  const [tab, setTab] = useState('recroom');
+  const [tab, setTab] = useState('entertainment');
+  const Active = TABS.find((t) => t.id === tab)?.Component;
 
   return (
     <div className={styles.app}>
@@ -57,10 +81,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className={styles.main}>
-        {tab === 'recroom' && <RecRoom />}
-        {tab === 'smarthome' && <SmartHome />}
-      </main>
+      <main className={styles.main}>{Active && <Active />}</main>
     </div>
   );
 }

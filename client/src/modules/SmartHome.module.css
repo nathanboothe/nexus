@@ -8,6 +8,14 @@
   min-height: 0;
 }
 
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
 .error {
   background: var(--danger-soft);
   border: 1px solid rgba(193, 102, 107, 0.4);

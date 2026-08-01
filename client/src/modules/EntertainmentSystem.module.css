@@ -1,0 +1,251 @@
+.page {
+  height: 100%;
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 18px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.flash {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
+  z-index: 100;
+}
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.entertainment {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.samsungCard {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.denonCard {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.section h2 {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.section h3 {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.btn {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.status {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+.sliderRow label {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.sliderRow input[type='range'] {
+  flex: 1;
+}
+
+.sliderValue {
+  font-size: 13.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Entertainment System internal layout ── */
+.entBody {
+  display: flex;
+  gap: 28px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.entLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.entLeft .btn {
+  justify-content: flex-start;
+  padding: 14px;
+  flex: 1;
+  font-size: 14.5px;
+}
+
+.entCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entRight {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  flex: 1.4;
+  min-width: 0;
+}
+
+.entRight .btn {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.entRight img {
+  width: 30px;
+  height: 30px;
+}
+
+.logoFallback {
+  display: none;
+  font-size: 12.5px;
+}
+
+.entConsoles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.entConsoles .btn {
+  flex: 1;
+}
+
+/* ── D-pad ── */
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 56px);
+  grid-template-rows: repeat(3, 56px);
+  gap: 8px;
+  justify-content: center;
+}
+
+.dpadUp {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.dpadLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.dpadOk {
+  grid-column: 2;
+  grid-row: 2;
+  font-weight: 700;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.dpadRight {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.dpadDown {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.dpadSecondary {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}

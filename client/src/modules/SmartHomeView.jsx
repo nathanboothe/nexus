@@ -12,6 +12,13 @@ const HA_POLL_INTERVAL_MS = 15000;
 // content or leaves too much empty space.
 const ENTITIES_PER_PAGE = 24;
 
+// Canonical section order — both ClimateLighting and CamerasDevices pass a
+// subset of these names in via the `sections` prop; this array just controls
+// display order within whichever subset is active.
+const SECTION_ORDER = ['Lights', 'Climate', 'Cameras', 'Reciever', 'Speaker', 'Google TV', 'Power', 'Network Backend'];
+
+const DOMAIN_SORT_PRIORITY = ['light', 'switch', 'climate', 'media_player', 'camera', 'select', 'binary_sensor', 'sensor', 'event'];
+
 // Catches render-time errors in the wrapped section only, so a bad entity
 // shape can't blank the whole page.
 class SectionErrorBoundary extends Component {
@@ -32,11 +39,6 @@ class SectionErrorBoundary extends Component {
     return this.props.children;
   }
 }
-
-// Order sections appear in on "By Section" — edit to reorder.
-const SECTION_ORDER = ['Lights', 'Climate', 'Cameras', 'Reciever', 'Speaker', 'Google TV', 'Power', 'Network Backend'];
-
-const DOMAIN_SORT_PRIORITY = ['light', 'switch', 'climate', 'media_player', 'camera', 'select', 'binary_sensor', 'sensor', 'event'];
 
 function sortEntities(list) {
   return [...list].sort((a, b) => {
@@ -342,7 +344,12 @@ function EntityCard({ config, live, onAction }) {
   );
 }
 
-export default function SmartHome() {
+// `sections` — array of section names (from SECTION_ORDER) this instance is
+// scoped to. `title` — page heading shown above the mode switch. Two thin
+// wrapper components (ClimateLighting, CamerasDevices) each render this with
+// a different `sections` list, so the pill row, pagination, and every
+// per-domain control only has to be maintained in one place.
+export default function SmartHomeView({ sections, title }) {
   const [haStates, setHaStates] = useState([]);
   const [haError, setHaError] = useState('');
   const [viewMode, setViewMode] = useState('section');
@@ -383,10 +390,15 @@ export default function SmartHome() {
 
   const statesMap = Object.fromEntries(haStates.map((s) => [s.entity_id, s]));
 
-  const sectionGroups = groupBySection(SMART_HOME_ENTITIES);
-  const locationGroups = groupByLocation(SMART_HOME_ENTITIES);
+  // Scope to only entities whose section is in this instance's `sections`
+  // prop, so location mode here only lists locations that actually have
+  // relevant devices, not all 218 entities' locations.
+  const scopedEntities = SMART_HOME_ENTITIES.filter((e) => sections.includes(e.section));
 
-  const availableSections = SECTION_ORDER.filter((s) => sectionGroups[s]);
+  const sectionGroups = groupBySection(scopedEntities);
+  const locationGroups = groupByLocation(scopedEntities);
+
+  const availableSections = SECTION_ORDER.filter((s) => sections.includes(s) && sectionGroups[s]);
   const availableLocations = sortBuckets(Object.keys(locationGroups), 'Unspecified');
 
   const currentSection = activeSection && sectionGroups[activeSection] ? activeSection : availableSections[0];
@@ -420,6 +432,8 @@ export default function SmartHome() {
   return (
     <div className={styles.page}>
       <SectionErrorBoundary>
+        <h1 className={styles.pageTitle}>{title}</h1>
+
         <div className={styles.topBar}>
           <div className={styles.modeSwitch}>
             <button className={viewMode === 'section' ? styles.modeActive : styles.modeBtn} onClick={() => selectViewMode('section')}>
