@@ -1,13 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #1a1815;
+  --surface: #242019;
+  --surface-hover: #2b271e;
+  --surface-raised: #2f2a20;
+  --border: rgba(245, 240, 232, 0.08);
+  --border-strong: rgba(245, 240, 232, 0.16);
+  --text: #f2ede3;
+  --text-secondary: #a39c8f;
+  --text-tertiary: #726a5d;
+  --accent: #d97757;
+  --accent-hover: #e2896b;
+  --accent-soft: rgba(217, 119, 87, 0.15);
+  --success: #8ba888;
+  --success-soft: rgba(139, 168, 136, 0.15);
+  --danger: #c1666b;
+  --danger-soft: rgba(193, 102, 107, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
+  height: 100%;
   margin: 0;
   padding: 0;
-  background: #0f0f0f;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  /* This is a wall/tablet panel, not a scrolling document — every tab
+     manages its own fixed-height layout instead of relying on page scroll. */
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
 }
 
 button {
-  font-family: inherit;
+  cursor: pointer;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+/* Hide scrollbars everywhere as a safety net — layouts are sized to avoid
+   needing them, but if content ever overflows during testing we want that
+   to be visually obvious as clipped content, not a scrollbar appearing. */
+::-webkit-scrollbar {
+  display: none;
 }

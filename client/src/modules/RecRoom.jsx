@@ -84,6 +84,7 @@ function VolumeSlider({ id, denonStatus, onChange }) {
         onMouseUp={(e) => commit(Number(e.target.value))}
         onTouchEnd={(e) => commit(Number(e.target.value))}
       />
+      <span className={styles.sliderValue}>{localValue}</span>
     </div>
   );
 }
@@ -367,22 +368,19 @@ export default function RecRoom() {
     <div className={styles.page}>
       {flashMsg && <div className={styles.flash}>{flashMsg}</div>}
 
-      {/* ── ENTERTAINMENT SYSTEM — full width ── */}
-      <section className={`${styles.section} ${styles.fullWidth}`}>
+      {/* ── ENTERTAINMENT SYSTEM ── */}
+      <section className={`${styles.section} ${styles.entertainment}`}>
         <h2>Entertainment System</h2>
 
-        {/* NOTE: no RecRoom.module.css was available, so this row's layout
-            uses inline styles rather than guessed class names. Send the CSS
-            file and this can move into proper module classes. */}
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          {/* LEFT COLUMN: Power + Watch TV */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 130 }}>
+        <div className={styles.entBody}>
+          {/* LEFT: Power + Watch TV */}
+          <div className={styles.entLeft}>
             <button className={styles.btn} onClick={toggleEverything} disabled={isTogglingAll}>
-              {isTogglingAll ? 'Working...' : '⏻ Power'}
+              {isTogglingAll ? 'Working…' : '⏻ Power'}
             </button>
             <button className={styles.btn} onClick={toggleEverything} disabled={isTogglingAll}>
               {isTogglingAll
-                ? 'Working...'
+                ? 'Working…'
                 : denonStatus?.power === 'on'
                 ? 'Stop Watch TV'
                 : 'Watch TV'}
@@ -390,42 +388,13 @@ export default function RecRoom() {
           </div>
 
           {/* CENTER: Google TV D-pad */}
-          <div style={{ flex: '0 0 auto' }}>
+          <div className={styles.entCenter}>
             <div className={styles.dpad}>
-              <button
-                className={`${styles.btn} ${styles.dpadUp}`}
-                onClick={() => googleTvNav('DPAD_UP')}
-                aria-label="Up"
-              >
-                ▲
-              </button>
-              <button
-                className={`${styles.btn} ${styles.dpadLeft}`}
-                onClick={() => googleTvNav('DPAD_LEFT')}
-                aria-label="Left"
-              >
-                ◀
-              </button>
-              <button
-                className={`${styles.btn} ${styles.dpadOk}`}
-                onClick={() => googleTvNav('DPAD_CENTER')}
-              >
-                OK
-              </button>
-              <button
-                className={`${styles.btn} ${styles.dpadRight}`}
-                onClick={() => googleTvNav('DPAD_RIGHT')}
-                aria-label="Right"
-              >
-                ▶
-              </button>
-              <button
-                className={`${styles.btn} ${styles.dpadDown}`}
-                onClick={() => googleTvNav('DPAD_DOWN')}
-                aria-label="Down"
-              >
-                ▼
-              </button>
+              <button className={`${styles.btn} ${styles.dpadUp}`} onClick={() => googleTvNav('DPAD_UP')} aria-label="Up">▲</button>
+              <button className={`${styles.btn} ${styles.dpadLeft}`} onClick={() => googleTvNav('DPAD_LEFT')} aria-label="Left">◀</button>
+              <button className={`${styles.btn} ${styles.dpadOk}`} onClick={() => googleTvNav('DPAD_CENTER')}>OK</button>
+              <button className={`${styles.btn} ${styles.dpadRight}`} onClick={() => googleTvNav('DPAD_RIGHT')} aria-label="Right">▶</button>
+              <button className={`${styles.btn} ${styles.dpadDown}`} onClick={() => googleTvNav('DPAD_DOWN')} aria-label="Down">▼</button>
             </div>
             <div className={styles.dpadSecondary}>
               <button className={styles.btn} onClick={() => googleTvNav('BACK')}>Back</button>
@@ -434,7 +403,7 @@ export default function RecRoom() {
           </div>
 
           {/* RIGHT: Streaming apps, 3x3 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, flex: '1 1 220px' }}>
+          <div className={styles.entRight}>
             {STREAMING_APPS.map((app) => (
               <button
                 key={app.name}
@@ -443,13 +412,8 @@ export default function RecRoom() {
                 aria-label={app.name}
                 title={app.name}
               >
-                <img
-                  src={`https://cdn.simpleicons.org/${app.logo}`}
-                  alt={app.name}
-                  onError={handleLogoError}
-                  style={{ width: '28px', height: '28px', display: 'block' }}
-                />
-                <span style={{ display: 'none' }}>{app.name}</span>
+                <img src={`https://cdn.simpleicons.org/${app.logo}`} alt={app.name} onError={handleLogoError} />
+                <span className={styles.logoFallback}>{app.name}</span>
               </button>
             ))}
           </div>
@@ -457,90 +421,55 @@ export default function RecRoom() {
 
         <VolumeSlider id="ent-vol" denonStatus={denonStatus} onChange={denonVolume} />
 
-        <h3>Play a Console</h3>
-        <div className={styles.grid}>
-          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_XBOX, 'Xbox')}>
-            Play Xbox
-          </button>
-          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_PS5, 'PS5')}>
-            Play PS5
-          </button>
-          <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_SWITCH2, 'Switch 2')}>
-            Play Switch 2
-          </button>
+        <div className={styles.consoleRow}>
+          <h3>Play a Console</h3>
+          <div className={styles.consoleGrid}>
+            <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_XBOX, 'Xbox')}>Play Xbox</button>
+            <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_PS5, 'PS5')}>Play PS5</button>
+            <button className={styles.btn} onClick={() => denonInput(DENON_SOURCE_SWITCH2, 'Switch 2')}>Play Switch 2</button>
+          </div>
         </div>
       </section>
 
-      {/* ── WHOLE-HOME AUDIO — now full width, same as Entertainment System ── */}
-      <section className={`${styles.section} ${styles.fullWidth}`}>
+      {/* ── WHOLE-HOME AUDIO ── */}
+      <section className={`${styles.section} ${styles.wholeHome}`}>
         <h2>Whole-Home Audio</h2>
         <p className={styles.hint}>
-          Home Theater is always included as the group leader. Toggle the
-          other speakers below before playing something.
+          Home Theater is always included as the group leader. Toggle the other speakers before playing something.
         </p>
 
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          {/* Album art */}
-          <div style={{ width: 120, flex: '0 0 auto' }}>
+        <div className={styles.waBody}>
+          <div className={styles.artBox}>
             {hasArt ? (
               <img
                 src={`/api/ha/media-thumbnail/${MASS_HOME_THEATER_ID}?t=${nowPlaying?.last_updated || ''}`}
                 alt="Album art"
-                style={{ width: 120, height: 120, borderRadius: 8, objectFit: 'cover', display: 'block' }}
                 onError={(e) => { e.currentTarget.style.opacity = 0.2; }}
               />
             ) : (
-              <div
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 8,
-                  background: '#2a2a2a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 12,
-                  color: '#777',
-                  textAlign: 'center',
-                  padding: 8,
-                }}
-              >
-                No album art
-              </div>
+              <span>No album art</span>
             )}
           </div>
 
-          {/* Now playing + transport + speaker toggles */}
-          <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className={styles.waInfo}>
             <div>
-              <div style={{ fontWeight: 600 }}>{mediaTitle || 'Nothing playing'}</div>
-              {mediaArtist && <div style={{ color: '#999', fontSize: 13 }}>{mediaArtist}</div>}
+              <div className={styles.nowPlayingTitle}>{mediaTitle || 'Nothing playing'}</div>
+              {mediaArtist && <div className={styles.nowPlayingArtist}>{mediaArtist}</div>}
             </div>
 
-            <div className={styles.grid}>
-              <button className={styles.btn} onClick={stopAudio} disabled={!isPlaying}>
-                ■ Stop
-              </button>
-            </div>
+            <button className={styles.btn} onClick={stopAudio} disabled={!isPlaying}>■ Stop</button>
 
-            <div>
-              <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>Speakers in group:</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.6 }}>
-                  <input type="checkbox" checked disabled />
-                  Home Theater (always on)
+            <div className={styles.speakerList}>
+              <span className={`${styles.speakerLabel} ${styles.disabled}`}>
+                <input type="checkbox" checked disabled />
+                Home Theater
+              </span>
+              {TOGGLEABLE_SPEAKERS.map((s) => (
+                <label key={s.key} className={styles.speakerLabel}>
+                  <input type="checkbox" checked={speakerSelection[s.key]} onChange={() => toggleSpeaker(s.key)} />
+                  {s.label}
                 </label>
-                {TOGGLEABLE_SPEAKERS.map((s) => (
-                  <label key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <input
-                      type="checkbox"
-                      checked={speakerSelection[s.key]}
-                      onChange={() => toggleSpeaker(s.key)}
-                    />
-                    {s.label}
-                  </label>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -549,28 +478,20 @@ export default function RecRoom() {
           <input
             type="text"
             className={styles.musicInput}
-            placeholder="Search a song or artist..."
+            placeholder="Search a song or artist…"
             value={musicQuery}
             onChange={(e) => setMusicQuery(e.target.value)}
             onKeyDown={handleMusicKeyDown}
             disabled={isGrouping}
           />
-          <button
-            className={styles.btn}
-            onClick={playSearch}
-            disabled={isGrouping || !musicQuery.trim()}
-          >
-            {isGrouping ? 'Working...' : 'Search & Play'}
+          <button className={styles.btn} onClick={playSearch} disabled={isGrouping || !musicQuery.trim()}>
+            {isGrouping ? 'Working…' : 'Search & Play'}
           </button>
-        </div>
-
-        <div className={styles.grid}>
           <button className={styles.btn} onClick={playLikedMusic} disabled={isGrouping}>
-            {isGrouping ? 'Working...' : '▶ Play Liked Music'}
+            {isGrouping ? 'Working…' : '▶ Liked Music'}
           </button>
         </div>
 
-        <h3>Synced Playlists</h3>
         <div className={styles.musicRow}>
           <select
             className={styles.musicSelect}
@@ -580,67 +501,42 @@ export default function RecRoom() {
           >
             {!playlists.length && <option value="">No playlists loaded</option>}
             {playlists.map((p) => (
-              <option key={p.uri} value={p.uri}>
-                {p.name}
-              </option>
+              <option key={p.uri} value={p.uri}>{p.name}</option>
             ))}
           </select>
-          <button
-            className={styles.btn}
-            onClick={playSelectedPlaylist}
-            disabled={isGrouping || !selectedPlaylist}
-          >
-            {isGrouping ? 'Working...' : 'Play'}
+          <button className={styles.btn} onClick={playSelectedPlaylist} disabled={isGrouping || !selectedPlaylist}>
+            {isGrouping ? 'Working…' : 'Play'}
           </button>
-          <button
-            className={styles.btn}
-            onClick={loadPlaylists}
-            disabled={isLoadingPlaylists}
-            title="Reload if you just added a playlist in YT Music"
-          >
-            {isLoadingPlaylists ? '...' : '⟳'}
+          <button className={styles.btn} onClick={loadPlaylists} disabled={isLoadingPlaylists} title="Reload if you just added a playlist in YT Music">
+            {isLoadingPlaylists ? '…' : '⟳'}
           </button>
         </div>
-        {playlistError && (
-          <div className={styles.musicErrorBox}>
-            Couldn't load playlists: {playlistError}
-          </div>
-        )}
 
-        {lastPlayed && !musicError && (
-          <div className={styles.status}>Last requested: {lastPlayed}</div>
-        )}
-        {musicError && (
-          <div className={styles.musicErrorBox}>
-            Playback failed: {musicError}
-          </div>
-        )}
+        {playlistError && <div className={styles.musicErrorBox}>Couldn't load playlists: {playlistError}</div>}
+        {lastPlayed && !musicError && <div className={styles.status}>Last requested: {lastPlayed}</div>}
+        {musicError && <div className={styles.musicErrorBox}>Playback failed: {musicError}</div>}
       </section>
 
-      {/* ── ROW: Samsung TV | Denon AVR ── */}
-      <section className={styles.section}>
+      {/* ── Samsung TV ── */}
+      <section className={`${styles.section} ${styles.samsungCard}`}>
         <h2>Samsung TV</h2>
         <div className={styles.grid}>
           {SAMSUNG_COMMANDS.map((c) =>
             c.command === 'power' ? (
-              <button key={c.command} className={styles.btn} onClick={samsungPowerButton}>
-                {c.label}
-              </button>
+              <button key={c.command} className={styles.btn} onClick={samsungPowerButton}>{c.label}</button>
             ) : (
-              <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>
-                {c.label}
-              </button>
+              <button key={c.command} className={styles.btn} onClick={() => samsungCommand(c.command)}>{c.label}</button>
             )
           )}
         </div>
       </section>
 
-      <section className={styles.section}>
+      {/* ── Denon AVR ── */}
+      <section className={`${styles.section} ${styles.denonCard}`}>
         <h2>Denon AVR</h2>
         {denonStatus && (
           <div className={styles.status}>
-            Power: {denonStatus.power ?? '—'} · Input: {denonStatus.input ?? '—'} · Vol:{' '}
-            {denonStatus.volume ?? '—'} · Mute: {denonStatus.mute ?? '—'}
+            Power: {denonStatus.power ?? '—'} · Input: {denonStatus.input ?? '—'} · Vol: {denonStatus.volume ?? '—'} · Mute: {denonStatus.mute ?? '—'}
           </div>
         )}
         <div className={styles.grid}>

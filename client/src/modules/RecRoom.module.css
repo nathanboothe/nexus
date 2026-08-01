@@ -1,41 +1,78 @@
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 16px;
-  max-width: 480px;
-  margin: 0 auto;
+  height: 100%;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 16px;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .flash {
   position: fixed;
-  top: 12px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: #222;
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 999px;
   font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-card);
   z-index: 100;
 }
 
 .section {
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.entertainment {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.wholeHome {
+  grid-column: 2 / 4;
+  grid-row: 1;
+}
+
+.samsungCard {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.denonCard {
+  grid-column: 3;
+  grid-row: 2;
 }
 
 .section h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
-  color: #ccc;
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
 .section h3 {
-  margin: 16px 0 8px;
-  font-size: 13px;
-  color: #999;
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .grid {
@@ -44,118 +81,140 @@
   gap: 8px;
 }
 
-.dpad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  max-width: 220px;
+.btn {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.btn {
-  background: #2a2a2a;
-  color: #fff;
-  border: 1px solid #3a3a3a;
-  border-radius: 8px;
-  padding: 12px 8px;
-  font-size: 13px;
-  cursor: pointer;
+.btn:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 .btn:active {
-  background: #3a3a3a;
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .status {
-  font-size: 13px;
-  color: #999;
-  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 8px;
 }
 
 .sliderRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 12px;
+  margin: 12px 0 0;
+}
+
+.sliderRow label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .sliderRow input[type='range'] {
   flex: 1;
 }
-/* ── Append this block to the END of RecRoom.module.css ── */
 
-.hint {
-  font-size: 0.85rem;
-  opacity: 0.7;
-  margin: 0.25rem 0 0.75rem;
+.sliderValue {
+  font-size: 13px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  width: 26px;
+  text-align: right;
+  flex-shrink: 0;
 }
 
-.musicRow {
+/* ── Entertainment System internal layout ── */
+.entBody {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.musicInput {
+  gap: 18px;
   flex: 1;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
-  font-size: 1rem;
+  min-height: 0;
+  align-items: stretch;
 }
 
-.musicInput:disabled {
-  opacity: 0.5;
+.entLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 128px;
+  flex-shrink: 0;
 }
 
-.musicErrorBox {
-  margin-top: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  background: rgba(220, 60, 60, 0.15);
-  border: 1px solid rgba(220, 60, 60, 0.4);
-  font-size: 0.85rem;
-  word-break: break-word;
+.entLeft .btn {
+  justify-content: flex-start;
+  padding: 12px;
+  flex: 1;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   RecRoom.module.css — CONSOLIDATED addition block.
+.entCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-   If you already pasted earlier "append to RecRoom.module.css" blocks from
-   prior messages in this thread, DELETE those first — this block replaces
-   them entirely (it includes everything from before plus the new grid
-   layout and D-pad rules). Paste this whole block at the END of the file.
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* ── Page-level 2-column grid layout ──
-   Collapses to a single column under 700px so Rec Room stays phone-usable.
-   This OVERRIDES whatever .page currently declares (last rule wins), so it
-   must stay below your original .page rule in the file. */
-.page {
+.entRight {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
-@media (min-width: 700px) {
-  .page {
-    grid-template-columns: 1fr 1fr;
-  }
+.entRight .btn {
+  flex-direction: column;
+  gap: 4px;
 }
 
-.fullWidth {
-  grid-column: 1 / -1;
+.entRight img {
+  width: 26px;
+  height: 26px;
 }
 
-/* ── Google TV D-pad — proper cross layout instead of a flat row ── */
+.logoFallback {
+  display: none;
+  font-size: 12px;
+}
+
+.consoleRow {
+  margin-top: 14px;
+}
+
+.consoleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+/* ── D-pad ── */
 .dpad {
   display: grid;
-  grid-template-columns: repeat(3, 60px);
-  grid-template-rows: repeat(3, 60px);
-  gap: 0.5rem;
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(3, 50px);
+  gap: 6px;
   justify-content: center;
-  margin: 0.5rem auto 1rem;
 }
 
 .dpadUp {
@@ -171,7 +230,9 @@
 .dpadOk {
   grid-column: 2;
   grid-row: 2;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .dpadRight {
@@ -187,48 +248,116 @@
 .dpadSecondary {
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 /* ── Whole-Home Audio ── */
 .hint {
-  font-size: 0.85rem;
-  opacity: 0.7;
-  margin: 0.25rem 0 0.75rem;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.waBody {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.artBox {
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px;
+}
+
+.artBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.waInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nowPlayingTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nowPlayingArtist {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.speakerList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.speakerLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px 6px 10px;
+}
+
+.speakerLabel.disabled {
+  opacity: 0.55;
 }
 
 .musicRow {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 8px;
+  margin: 10px 0 0;
   align-items: center;
 }
 
-.musicInput {
-  flex: 1;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
-  font-size: 1rem;
-}
-
-.musicInput:disabled {
-  opacity: 0.5;
-}
-
+.musicInput,
 .musicSelect {
   flex: 1;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
-  font-size: 1rem;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 13.5px;
+  min-width: 0;
 }
 
+.musicInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.musicInput:disabled,
 .musicSelect:disabled {
   opacity: 0.5;
 }
@@ -242,11 +371,12 @@
 }
 
 .musicErrorBox {
-  margin-top: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
-  background: rgba(220, 60, 60, 0.15);
-  border: 1px solid rgba(220, 60, 60, 0.4);
-  font-size: 0.85rem;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  border: 1px solid rgba(193, 102, 107, 0.4);
+  color: #f0b8bb;
+  font-size: 12.5px;
   word-break: break-word;
 }

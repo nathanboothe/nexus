@@ -6,6 +6,12 @@ import { SMART_HOME_ENTITIES } from './entityConfig.js';
 // HA's own REST API has no daily cap — safe to poll fairly often
 const HA_POLL_INTERVAL_MS = 15000;
 
+// Cards per "screen" within a section/location. This is a tuned guess for a
+// tablet/Skylight-landscape viewport with the dense row card style below —
+// check it against the real device and adjust up/down if a page ever clips
+// content or leaves too much empty space.
+const ENTITIES_PER_PAGE = 24;
+
 // Catches render-time errors in the wrapped section only, so a bad entity
 // shape can't blank the whole page.
 class SectionErrorBoundary extends Component {
@@ -27,7 +33,7 @@ class SectionErrorBoundary extends Component {
   }
 }
 
-// Order sections appear in on "Group by Section" — edit to reorder.
+// Order sections appear in on "By Section" — edit to reorder.
 const SECTION_ORDER = ['Lights', 'Climate', 'Cameras', 'Reciever', 'Speaker', 'Google TV', 'Power', 'Network Backend'];
 
 const DOMAIN_SORT_PRIORITY = ['light', 'switch', 'climate', 'media_player', 'camera', 'select', 'binary_sensor', 'sensor', 'event'];
@@ -72,6 +78,45 @@ function groupByLocation(entities) {
   return map;
 }
 
+// Splits a section's { groupName: entities[] } into "screens" that each stay
+// under ENTITIES_PER_PAGE cards, keeping whole groups together where
+// possible so a group's header doesn't get orphaned from its cards. A single
+// group larger than one page (e.g. every Light) gets chunked on its own
+// page(s) rather than forcing everything else onto extra screens too.
+function paginateGroups(groupEntries, perPage) {
+  const pages = [];
+  let current = [];
+  let currentCount = 0;
+
+  for (const [groupName, ents] of groupEntries) {
+    const sorted = sortEntities(ents);
+
+    if (sorted.length > perPage) {
+      if (current.length) {
+        pages.push(current);
+        current = [];
+        currentCount = 0;
+      }
+      for (let i = 0; i < sorted.length; i += perPage) {
+        const chunk = sorted.slice(i, i + perPage);
+        pages.push([[i > 0 ? `${groupName} (cont.)` : groupName, chunk]]);
+      }
+      continue;
+    }
+
+    if (current.length && currentCount + sorted.length > perPage) {
+      pages.push(current);
+      current = [];
+      currentCount = 0;
+    }
+    current.push([groupName, sorted]);
+    currentCount += sorted.length;
+  }
+
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [[]];
+}
+
 // ── COLOR HELPERS ───────────────────────────────────────────────────────────
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -93,7 +138,7 @@ function LightControls({ id, live, color, onAction }) {
   return (
     <div className={styles.cardControls}>
       <button className={styles.btn} onClick={() => onAction('light', isOn ? 'turn_off' : 'turn_on', id)}>
-        {isOn ? 'Turn Off' : 'Turn On'}
+        {isOn ? 'Off' : 'On'}
       </button>
       {isOn && (
         <input
@@ -114,7 +159,7 @@ function LightControls({ id, live, color, onAction }) {
             onChange={(e) => setHex(e.target.value)}
           />
           <button className={styles.btn} onClick={() => onAction('light', 'turn_on', id, { rgb_color: hexToRgb(hex) })}>
-            Set Color
+            Set
           </button>
         </div>
       )}
@@ -169,7 +214,7 @@ function MediaControls({ id, live, onAction }) {
         {state === 'playing' ? 'Pause' : 'Play'}
       </button>
       <button className={styles.btn} onClick={() => onAction('media_player', 'turn_off', id)}>
-        Turn Off
+        Off
       </button>
     </div>
   );
@@ -212,7 +257,7 @@ function sensorUnit(entityId) {
 
 function ReadingDisplay({ id, live }) {
   if (/_status(_\d+)?$/.test(id)) {
-    const color = live.state === 'Available' ? '#4caf50' : live.state === 'Unavailable' ? '#e05252' : '#999';
+    const color = live.state === 'Available' ? 'var(--success)' : live.state === 'Unavailable' ? 'var(--danger)' : 'var(--text-secondary)';
     return <div className={styles.reading} style={{ color }}>{live.state}</div>;
   }
   const value = parseSensorValue(live.state);
@@ -268,18 +313,21 @@ function CameraCard({ id, name }) {
 
 function EntityCard({ config, live, onAction }) {
   const domain = config.id.split('.')[0];
+  const isCamera = domain === 'camera';
 
   if (!live) {
     return (
-      <div className={styles.card}>
+      <div className={isCamera ? styles.cameraCard : styles.card}>
         <div className={styles.cardName}>{config.name}</div>
         <div className={styles.reading}>Not found in HA</div>
       </div>
     );
   }
 
+  const isActive = ['on', 'playing', 'home'].includes(live.state);
+
   return (
-    <div className={styles.card}>
+    <div className={`${isCamera ? styles.cameraCard : styles.card} ${isActive ? styles.cardActive : ''}`}>
       <div className={styles.cardName}>{config.name}</div>
       {domain === 'light' && <LightControls id={config.id} live={live} color={config.color} onAction={onAction} />}
       {domain === 'switch' && <SwitchControls id={config.id} live={live} onAction={onAction} />}
@@ -298,6 +346,9 @@ export default function SmartHome() {
   const [haStates, setHaStates] = useState([]);
   const [haError, setHaError] = useState('');
   const [viewMode, setViewMode] = useState('section');
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeLocation, setActiveLocation] = useState(null);
+  const [page, setPage] = useState(0);
 
   const loadHaStates = useCallback(async () => {
     try {
@@ -335,49 +386,98 @@ export default function SmartHome() {
   const sectionGroups = groupBySection(SMART_HOME_ENTITIES);
   const locationGroups = groupByLocation(SMART_HOME_ENTITIES);
 
+  const availableSections = SECTION_ORDER.filter((s) => sectionGroups[s]);
+  const availableLocations = sortBuckets(Object.keys(locationGroups), 'Unspecified');
+
+  const currentSection = activeSection && sectionGroups[activeSection] ? activeSection : availableSections[0];
+  const currentLocation = activeLocation && locationGroups[activeLocation] ? activeLocation : availableLocations[0];
+
+  function selectViewMode(mode) {
+    setViewMode(mode);
+    setPage(0);
+  }
+  function selectSection(s) {
+    setActiveSection(s);
+    setPage(0);
+  }
+  function selectLocation(l) {
+    setActiveLocation(l);
+    setPage(0);
+  }
+
+  let pages = [[]];
+  let headerLabel = '';
+  if (viewMode === 'section' && currentSection) {
+    pages = paginateGroups(Object.entries(sectionGroups[currentSection] || {}), ENTITIES_PER_PAGE);
+    headerLabel = currentSection;
+  } else if (viewMode === 'location' && currentLocation) {
+    pages = paginateGroups([[currentLocation, locationGroups[currentLocation] || []]], ENTITIES_PER_PAGE);
+    headerLabel = currentLocation;
+  }
+  const safePage = Math.min(page, pages.length - 1);
+  const pageGroups = pages[safePage] || [];
+
   return (
     <div className={styles.page}>
       <SectionErrorBoundary>
-        <div className={styles.sectionHeader}>
-          <h2>Smart Home</h2>
-          <div className={styles.headerControls}>
-            <select className={styles.select} value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
-              <option value="section">Group by Section</option>
-              <option value="location">Group by Location</option>
-            </select>
-            <button className={styles.btn} onClick={loadHaStates} title="Refresh">⟳</button>
+        <div className={styles.topBar}>
+          <div className={styles.modeSwitch}>
+            <button className={viewMode === 'section' ? styles.modeActive : styles.modeBtn} onClick={() => selectViewMode('section')}>
+              By Section
+            </button>
+            <button className={viewMode === 'location' ? styles.modeActive : styles.modeBtn} onClick={() => selectViewMode('location')}>
+              By Location
+            </button>
           </div>
+          <button className={styles.refreshBtn} onClick={loadHaStates} title="Refresh">⟳ Refresh</button>
         </div>
 
         {haError && <div className={styles.error}>{haError}</div>}
         {!haStates.length && !haError && <div className={styles.loading}>Loading devices…</div>}
 
-        {viewMode === 'section'
-          ? SECTION_ORDER.filter((s) => sectionGroups[s]).map((section) => (
-              <section key={section} className={styles.section}>
-                <h2>{section}</h2>
-                {Object.entries(sectionGroups[section]).map(([group, ents]) => (
-                  <div key={group} className={styles.subsection}>
-                    <h3>{group}</h3>
-                    <div className={styles.grid}>
-                      {sortEntities(ents).map((e) => (
-                        <EntityCard key={e.id} config={e} live={statesMap[e.id]} onAction={handleAction} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </section>
-            ))
-          : sortBuckets(Object.keys(locationGroups), 'Unspecified').map((location) => (
-              <section key={location} className={styles.section}>
-                <h2>{location}</h2>
+        <div className={styles.pillRow}>
+          {(viewMode === 'section' ? availableSections : availableLocations).map((key) => {
+            const isActive = (viewMode === 'section' ? currentSection : currentLocation) === key;
+            return (
+              <button
+                key={key}
+                className={isActive ? styles.pillActive : styles.pill}
+                onClick={() => (viewMode === 'section' ? selectSection(key) : selectLocation(key))}
+              >
+                {key}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className={styles.sectionBody}>
+          <h2 className={styles.sectionTitle}>{headerLabel}</h2>
+
+          <div className={styles.sectionContent}>
+            {pageGroups.map(([group, ents]) => (
+              <div key={group} className={styles.subsection}>
+                {group !== headerLabel && <h3>{group}</h3>}
                 <div className={styles.grid}>
-                  {sortEntities(locationGroups[location]).map((e) => (
+                  {ents.map((e) => (
                     <EntityCard key={e.id} config={e} live={statesMap[e.id]} onAction={handleAction} />
                   ))}
                 </div>
-              </section>
+              </div>
             ))}
+          </div>
+
+          {pages.length > 1 && (
+            <div className={styles.pager}>
+              <button className={styles.btn} onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage === 0}>
+                ← Prev
+              </button>
+              <span className={styles.pagerLabel}>Page {safePage + 1} of {pages.length}</span>
+              <button className={styles.btn} onClick={() => setPage((p) => Math.min(pages.length - 1, p + 1))} disabled={safePage === pages.length - 1}>
+                Next →
+              </button>
+            </div>
+          )}
+        </div>
       </SectionErrorBoundary>
     </div>
   );
