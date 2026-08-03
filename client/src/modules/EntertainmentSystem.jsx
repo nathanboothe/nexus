@@ -9,6 +9,13 @@ const DENON_SOURCE_XBOX = 'XBOX';
 const DENON_SOURCE_PS5 = 'PS5';
 const DENON_SOURCE_SWITCH2 = 'Switch 2';
 
+// PLACEHOLDER — confirm this matches the exact command name used when the
+// input/source IR code was learned on the Broadlink hub (remote.base_station,
+// device 'TV'). Broadlink is fire-and-forget with no state read-back, so a
+// wrong string here fails silently (button does nothing, no error surfaced).
+// If it's wrong, this is the only line that needs to change.
+const SAMSUNG_INPUT_COMMAND = 'source';
+
 // Simple Icons CDN (https://simpleicons.org) — free brand icon SVGs by slug.
 // A couple of newer/rebranded services (Max, Peacock, Paramount+) may not have
 // a perfectly matching slug; the <img onError> fallback below swaps to a text
@@ -27,6 +34,7 @@ const STREAMING_APPS = [
 
 const SAMSUNG_COMMANDS = [
   { label: 'Power', command: 'power' },
+  { label: 'Input', command: SAMSUNG_INPUT_COMMAND },
   { label: 'Vol +', command: 'volume_up' },
   { label: 'Vol -', command: 'volume_down' },
   { label: 'Mute', command: 'mute' },
@@ -71,6 +79,43 @@ function VolumeSlider({ id, denonStatus, onChange }) {
         onTouchEnd={(e) => commit(Number(e.target.value))}
       />
       <span className={styles.sliderValue}>{localValue}</span>
+    </div>
+  );
+}
+
+// Bass (tone control) slider. -6dB to +6dB in 1dB steps, matching the
+// Denon's actual PSBAS range. Unlike Volume, the Denon protocol gives no
+// reliable read-back for tone control over denonavr.get_command, so this has
+// no real state to sync against — it starts at 0 (flat) on every page load
+// regardless of what's actually set on the receiver, and only reflects
+// what's been sent locally since. Same fire-and-forget caveat as the
+// Samsung IR buttons. Only commits on release, matching VolumeSlider,
+// rather than firing a request on every step while dragging.
+function BassSlider({ id, onChange }) {
+  const [localValue, setLocalValue] = useState(0);
+  const isDragging = useRef(false);
+
+  function commit(value) {
+    isDragging.current = false;
+    onChange(value);
+  }
+
+  return (
+    <div className={styles.sliderRow}>
+      <label htmlFor={id}>Bass</label>
+      <input
+        id={id}
+        type="range"
+        min="-6"
+        max="6"
+        value={localValue}
+        onMouseDown={() => { isDragging.current = true; }}
+        onTouchStart={() => { isDragging.current = true; }}
+        onChange={(e) => setLocalValue(Number(e.target.value))}
+        onMouseUp={(e) => commit(Number(e.target.value))}
+        onTouchEnd={(e) => commit(Number(e.target.value))}
+      />
+      <span className={styles.sliderValue}>{localValue > 0 ? `+${localValue}` : localValue} dB</span>
     </div>
   );
 }
@@ -180,6 +225,15 @@ export default function EntertainmentSystem() {
     }
   }
 
+  async function denonBass(db) {
+    try {
+      await api('/denon/bass', 'POST', { db });
+      flash(`Bass: ${db > 0 ? '+' : ''}${db} dB`);
+    } catch (err) {
+      flash(`Error: ${err.message}`);
+    }
+  }
+
   // ── MASTER TOGGLE ─────────────────────────────────────────────────────────
   // Direction is decided by the Denon's real reported state (reliable, from
   // HA). The TV has no real state, so it's only toggled when the locally
@@ -211,6 +265,8 @@ export default function EntertainmentSystem() {
       setIsTogglingAll(false);
     }
   }
+
+  const isDirectMode = denonStatus?.soundMode && /direct/i.test(denonStatus.soundMode);
 
   return (
     <div className={styles.page}>
@@ -307,6 +363,12 @@ export default function EntertainmentSystem() {
           <button className={styles.btn} onClick={() => denonMute(false)}>Unmute</button>
         </div>
         <VolumeSlider id="denon-vol" denonStatus={denonStatus} onChange={denonVolume} />
+        <BassSlider id="denon-bass" onChange={denonBass} />
+        {isDirectMode && (
+          <div style={{ fontSize: '0.85em', opacity: 0.8, marginTop: 4 }}>
+            Bass has no effect in {denonStatus.soundMode} mode.
+          </div>
+        )}
       </section>
     </div>
   );

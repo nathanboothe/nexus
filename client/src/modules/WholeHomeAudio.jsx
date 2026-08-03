@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../api.js';
 import styles from './WholeHomeAudio.module.css';
 
@@ -14,6 +14,42 @@ const TOGGLEABLE_SPEAKERS = [
   { key: 'massLivingRoom', label: 'Living Room' },
   { key: 'massLoft', label: 'Loft' },
 ];
+
+// Bass (tone control) slider — same PSBAS-backed endpoint and same caveats
+// as the identical control on the Entertainment System page: -6dB to +6dB
+// in 1dB steps, no real read-back from the Denon protocol (starts at 0/flat
+// on every load regardless of the receiver's actual current setting), and
+// it's a receiver-wide EQ setting so it affects whatever's playing
+// regardless of source — HEOS Music here, TV/consoles on the other page.
+// Only commits on release rather than firing a request on every drag step.
+function BassSlider({ id, onChange }) {
+  const [localValue, setLocalValue] = useState(0);
+  const isDragging = useRef(false);
+
+  function commit(value) {
+    isDragging.current = false;
+    onChange(value);
+  }
+
+  return (
+    <div className={styles.sliderRow}>
+      <label htmlFor={id}>Bass</label>
+      <input
+        id={id}
+        type="range"
+        min="-6"
+        max="6"
+        value={localValue}
+        onMouseDown={() => { isDragging.current = true; }}
+        onTouchStart={() => { isDragging.current = true; }}
+        onChange={(e) => setLocalValue(Number(e.target.value))}
+        onMouseUp={(e) => commit(Number(e.target.value))}
+        onTouchEnd={(e) => commit(Number(e.target.value))}
+      />
+      <span className={styles.sliderValue}>{localValue > 0 ? `+${localValue}` : localValue} dB</span>
+    </div>
+  );
+}
 
 export default function WholeHomeAudio() {
   const [flashMsg, setFlashMsg] = useState('');
@@ -113,6 +149,15 @@ export default function WholeHomeAudio() {
     }
   }
 
+  async function denonBass(db) {
+    try {
+      await api('/denon/bass', 'POST', { db });
+      flash(`Bass: ${db > 0 ? '+' : ''}${db} dB`);
+    } catch (err) {
+      flash(`Error: ${err.message}`);
+    }
+  }
+
   function handleMusicKeyDown(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -195,6 +240,8 @@ export default function WholeHomeAudio() {
           <button className={`${styles.btn} ${styles.stopBtn}`} onClick={stopAudio} disabled={!isPlaying}>
             ■ Stop
           </button>
+
+          <BassSlider id="wha-bass" onChange={denonBass} />
 
           <div className={styles.speakerSection}>
             <h3>Speakers in group</h3>
