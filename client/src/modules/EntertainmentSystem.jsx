@@ -14,15 +14,15 @@ const DENON_SOURCE_SWITCH2 = 'Switch 2';
 // a perfectly matching slug; the <img onError> fallback below swaps to a text
 // label if a given logo fails to load, so nothing breaks visually either way.
 const STREAMING_APPS = [
-  { name: 'Netflix', activity: 'com.netflix.ninja/.MainActivity', logo: 'netflix' },
-  { name: 'YouTube', activity: 'com.google.android.youtube.tv/.MainActivity', logo: 'youtube' },
-  { name: 'Disney+', activity: 'com.disney.disneyplus/.MainActivity', logo: 'disneyplus' },
-  { name: 'Max', activity: 'com.wbd.stream/com.wbd.beam.BeamActivity', logo: 'hbomax' },
-  { name: 'Hulu', activity: 'com.hulu.livingroomplus/.MainActivity', logo: 'hulu' },
-  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom/com.amazon.ignition.IgnitionActivity', logo: 'primevideo' },
-  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv/.MainActivity', logo: 'appletv' },
-  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid/.MainActivity', logo: 'peacock' },
-  { name: 'Paramount+', activity: 'com.cbs.ott/.MainActivity', logo: 'paramountplus' },
+  { name: 'Netflix', activity: 'com.netflix.ninja', logo: 'netflix' },
+  { name: 'YouTube', activity: 'com.google.android.youtube.tv', logo: 'youtube' },
+  { name: 'Disney+', activity: 'com.disney.disneyplus', logo: 'disneyplus' },
+  { name: 'Max', activity: 'com.wbd.stream', logo: 'hbomax' },
+  { name: 'Hulu', activity: 'com.hulu.livingroomplus', logo: 'hulu' },
+  { name: 'Prime', activity: 'com.amazon.amazonvideo.livingroom', logo: 'primevideo' },
+  { name: 'Apple TV', activity: 'com.apple.atve.androidtv.appletv', logo: 'appletv' },
+  { name: 'Peacock', activity: 'com.peacocktv.peacockandroid', logo: 'peacock' },
+  { name: 'Paramount+', activity: 'com.cbs.ott', logo: 'paramountplus' },
 ];
 
 const SAMSUNG_COMMANDS = [
