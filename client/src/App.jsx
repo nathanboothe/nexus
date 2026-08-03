@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import EntertainmentSystem from './modules/EntertainmentSystem.jsx';
+import TvReceiver from './modules/TvReceiver.jsx';
 import WholeHomeAudio from './modules/WholeHomeAudio.jsx';
 import ClimateLighting from './modules/ClimateLighting.jsx';
 import CamerasDevices from './modules/CamerasDevices.jsx';
@@ -34,6 +35,16 @@ function IconSun(props) {
   );
 }
 
+function IconRemote(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="7" y="2.5" width="10" height="19" rx="3.5" />
+      <circle cx="12" cy="7.2" r="1.4" />
+      <path d="M9.5 12h5M9.5 15.5h5" />
+    </svg>
+  );
+}
+
 function IconCamera(props) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -45,6 +56,7 @@ function IconCamera(props) {
 
 const TABS = [
   { id: 'entertainment', label: 'Entertainment System', Icon: IconMedia, Component: EntertainmentSystem },
+  { id: 'tv-receiver', label: 'TV & Receiver', Icon: IconRemote, Component: TvReceiver },
   { id: 'audio', label: 'Whole-Home Audio', Icon: IconSpeaker, Component: WholeHomeAudio },
   { id: 'climate', label: 'Climate & Lighting', Icon: IconSun, Component: ClimateLighting },
   { id: 'cameras', label: 'Cameras & Devices', Icon: IconCamera, Component: CamerasDevices },
