@@ -15,10 +15,10 @@
 /* ── Entertainment System internal layout ── */
 .entBody {
   display: flex;
-  gap: 24px;
+  gap: 32px;
   flex: 1;
   min-height: 0;
-  align-items: stretch;
+  align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -26,33 +26,25 @@
 .entLeft {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: clamp(130px, 14vw, 170px);
+  align-items: center;
+  gap: 12px;
+  width: clamp(160px, 17vw, 210px);
   flex-shrink: 0;
 }
 
-.entLeft .btn {
-  justify-content: flex-start;
-  padding: 14px;
-  flex: 1;
+.entLeft > .btn {
+  width: 100%;
+  padding: 16px;
   font-size: 14.5px;
-}
-
-.entCenter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 1;
-  min-width: 0;
-  min-height: 0;
 }
 
 .entRight {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(100px, 170px));
+  grid-auto-rows: minmax(80px, 120px);
+  gap: 16px;
+  justify-content: center;
+  align-content: center;
   flex: 1.4;
   min-width: 0;
   overflow: hidden;
@@ -60,45 +52,47 @@
 
 .entRight .btn {
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 6px;
+  gap: 8px;
+  padding: 12px 8px;
   min-width: 0;
 }
 
 .entRight img {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
 }
 
 .logoFallback {
   display: none;
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .entConsoles {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: clamp(110px, 12vw, 150px);
+  justify-content: center;
+  gap: 14px;
+  width: clamp(130px, 14vw, 170px);
   flex-shrink: 0;
   overflow: hidden;
 }
 
 .entConsoles .btn {
-  flex: 1;
-  min-height: 0;
-  padding: 10px 6px;
+  flex: none;
+  min-height: 64px;
+  padding: 14px 10px;
 }
 
 /* ── D-pad ── */
 .dpad {
   display: grid;
-  grid-template-columns: repeat(3, clamp(44px, 5.5vw, 64px));
-  grid-template-rows: repeat(3, clamp(44px, 5.5vw, 64px));
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
   gap: 8px;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 8px;
 }
 
 .dpadUp {

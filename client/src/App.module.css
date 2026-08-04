@@ -109,3 +109,40 @@
   display: flex;
   flex-direction: column;
 }
+
+/* TCL TABMAX 10.4 kiosk (Fully Kiosk Browser, fullscreen landscape,
+   confirmed viewport 1000x600 CSS px). Range-based rather than an
+   exact-pixel match so small zoom/rounding differences between Chrome
+   and Fully Kiosk's WebView don't fall outside the breakpoint. */
+@media (max-width: 1024px) and (max-height: 700px) and (orientation: landscape) {
+  .sidebar {
+    width: 180px;
+    padding: 16px 10px;
+  }
+
+  .brand {
+    padding: 4px 6px 16px;
+    margin-bottom: 6px;
+  }
+
+  .brandName {
+    font-size: 16px;
+  }
+
+  .navBtn,
+  .navActive {
+    padding: 10px 10px;
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .navIcon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .sidebarFooter {
+    padding: 8px;
+    font-size: 11px;
+  }
+}

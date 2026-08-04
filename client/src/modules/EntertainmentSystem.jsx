@@ -158,7 +158,7 @@ export default function EntertainmentSystem() {
         <h2>Entertainment System</h2>
 
         <div className={styles.entBody}>
-          {/* LEFT: Power + Watch TV */}
+          {/* LEFT: Power + Watch TV + Google TV nav, stacked */}
           <div className={styles.entLeft}>
             <button className={shared.btn} onClick={toggleEverything} disabled={isTogglingAll}>
               {isTogglingAll ? 'Working…' : '⏻ Power'}
@@ -170,10 +170,7 @@ export default function EntertainmentSystem() {
                 ? 'Stop Watch TV'
                 : 'Watch TV'}
             </button>
-          </div>
 
-          {/* CENTER: Google TV D-pad */}
-          <div className={styles.entCenter}>
             <div className={styles.dpad}>
               <button className={`${shared.btn} ${styles.dpadUp}`} onClick={() => googleTvNav('DPAD_UP')} aria-label="Up">▲</button>
               <button className={`${shared.btn} ${styles.dpadLeft}`} onClick={() => googleTvNav('DPAD_LEFT')} aria-label="Left">◀</button>
@@ -186,6 +183,7 @@ export default function EntertainmentSystem() {
               <button className={shared.btn} onClick={() => googleTvNav('HOME')}>Home</button>
             </div>
           </div>
+
 
           {/* RIGHT: Streaming apps, 3x3 */}
           <div className={styles.entRight}>
