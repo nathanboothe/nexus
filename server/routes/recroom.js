@@ -74,9 +74,10 @@ router.post('/googletv/nav', async (req, res) => {
 // ── GOOGLE TV APP LAUNCH ─────────────────────────────────────────────────────
 // This device uses HA's official "Android TV Remote" integration, not the
 // older ADB-based one — there's no adb_command service. Instead, remote.turn_on
-// accepts an `activity` field targeting the remote entity (same one nav uses),
-// and it takes the same package/activity format already used for these apps.
-// body: { activity: 'com.netflix.ninja/.MainActivity' }
+// accepts an `activity` field targeting the remote entity (same one nav uses).
+// Since HA 2024.6 this integration wants BARE package names only — no
+// "/.MainActivity" suffix, no "market://launch?id=" prefix.
+// body: { activity: 'com.netflix.ninja' }
 router.post('/googletv/launch', async (req, res) => {
   try {
     const { activity } = req.body;
@@ -103,7 +104,90 @@ async function prepAndJoinGroup(members) {
   });
 }
 
-// ── SPEAKER GROUP: SEARCH & PLAY (YouTube Music) ──
+// ── SPEAKER GROUP: SEARCH (read-only — does NOT join the group or play) ──
+// Global search across everything configured in Music Assistant (currently
+// just YouTube Music). Returns tracks, albums, and playlists together so the
+// frontend can show a results list for the person to pick from, instead of
+// the old behavior of blindly playing the #1 auto-matched track.
+// body: { query: 'Fear NF' }
+router.post('/speakers/search', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query || !query.trim()) {
+      return res.status(400).json({ error: 'query is required' });
+    }
+
+    const searchResult = await callService(
+      'music_assistant',
+      'search',
+      {
+        config_entry_id: config.musicAssistant.configEntryId,
+        name: query.trim(),
+        media_type: ['track', 'album', 'playlist'],
+        limit: 8,
+      },
+      { returnResponse: true }
+    );
+
+    const payload = searchResult?.service_response ?? searchResult ?? {};
+
+    const results = [
+      ...(payload?.tracks ?? []).map((t) => ({
+        uri: t.uri,
+        name: t.name,
+        subtitle: (t.artists || []).map((a) => a.name).join(', '),
+        type: 'track',
+      })),
+      ...(payload?.albums ?? []).map((a) => ({
+        uri: a.uri,
+        name: a.name,
+        subtitle: (a.artists || []).map((x) => x.name).join(', '),
+        type: 'album',
+      })),
+      ...(payload?.playlists ?? []).map((p) => ({
+        uri: p.uri,
+        name: p.name,
+        subtitle: 'Playlist',
+        type: 'playlist',
+      })),
+    ].filter((r) => r.uri && r.name);
+
+    res.json({ ok: true, results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: PLAY A SPECIFIC SEARCH RESULT ──
+// Called when the person taps a result from /speakers/search — this is where
+// the group actually gets joined and playback actually starts.
+// body: { uri, mediaType: 'track' | 'album' | 'playlist', members }
+router.post('/speakers/group-play-item', async (req, res) => {
+  try {
+    const { uri, mediaType, members } = req.body;
+    if (!uri || !mediaType) {
+      return res.status(400).json({ error: 'uri and mediaType are required' });
+    }
+
+    await prepAndJoinGroup(resolveMembers(members));
+
+    await callService('music_assistant', 'play_media', {
+      entity_id: config.entities.massHomeTheater,
+      media_id: uri,
+      media_type: mediaType,
+      enqueue: 'replace',
+    });
+
+    res.json({ ok: true, played: uri });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: SEARCH & PLAY (legacy — no longer used by the UI) ──
+// Kept for now in case anything else calls it directly; the frontend uses
+// /speakers/search + /speakers/group-play-item instead, which lets the
+// person pick the right match rather than trusting the #1 auto-result.
 // body: { query: 'Fear NF' }
 router.post('/speakers/group-search', async (req, res) => {
   try {
@@ -126,7 +210,6 @@ router.post('/speakers/group-search', async (req, res) => {
       { returnResponse: true }
     );
 
-    // HA wraps response-returning service calls under service_response
     const payload = searchResult?.service_response ?? searchResult ?? {};
     const track = payload?.tracks?.[0];
 
@@ -147,7 +230,9 @@ router.post('/speakers/group-search', async (req, res) => {
   }
 });
 
-// ── SPEAKER GROUP: PLAY YOUTUBE MUSIC LIKED SONGS ──
+// ── SPEAKER GROUP: PLAY YOUTUBE MUSIC LIKED SONGS (legacy — no longer used) ──
+// The standalone "Play Liked Music" button was removed from the UI since
+// Liked Music is already selectable from the Synced Playlists dropdown.
 router.post('/speakers/group-favorites', async (req, res) => {
   try {
     await prepAndJoinGroup(resolveMembers(req.body?.members));
@@ -229,6 +314,32 @@ router.post('/speakers/group-play-playlist', async (req, res) => {
 router.post('/speakers/stop', async (_req, res) => {
   try {
     await callService('media_player', 'media_stop', {
+      entity_id: config.entities.massHomeTheater,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── SPEAKER GROUP: TRANSPORT CONTROLS (play/pause/next/previous) ──
+// Targets the group leader — same reasoning as /speakers/stop above.
+// body: { action: 'play' | 'pause' | 'next' | 'previous' }
+const TRANSPORT_SERVICE_MAP = {
+  play: 'media_play',
+  pause: 'media_pause',
+  next: 'media_next_track',
+  previous: 'media_previous_track',
+};
+
+router.post('/speakers/transport', async (req, res) => {
+  try {
+    const { action } = req.body;
+    const service = TRANSPORT_SERVICE_MAP[action];
+    if (!service) {
+      return res.status(400).json({ error: `Unknown transport action: ${action}` });
+    }
+    await callService('media_player', service, {
       entity_id: config.entities.massHomeTheater,
     });
     res.json({ ok: true });

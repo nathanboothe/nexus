@@ -15,6 +15,8 @@ const TOGGLEABLE_SPEAKERS = [
   { key: 'massLoft', label: 'Loft' },
 ];
 
+const TYPE_LABEL = { track: 'Song', album: 'Album', playlist: 'Playlist' };
+
 // Bass (tone control) slider — same PSBAS-backed endpoint and same caveats
 // as the identical control on the Entertainment System page: -6dB to +6dB
 // in 1dB steps, no real read-back from the Denon protocol (starts at 0/flat
@@ -53,7 +55,13 @@ function BassSlider({ id, onChange }) {
 
 export default function WholeHomeAudio() {
   const [flashMsg, setFlashMsg] = useState('');
-  const [musicQuery, setMusicQuery] = useState('');
+
+  // Search — pure lookup, no playback until a result is clicked.
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+
   const [isGrouping, setIsGrouping] = useState(false);
   const [musicError, setMusicError] = useState('');
   const [lastPlayed, setLastPlayed] = useState('');
@@ -102,34 +110,45 @@ export default function WholeHomeAudio() {
     return ['massHomeTheater', ...keys];
   }
 
-  async function playSearch() {
-    if (!musicQuery.trim()) return;
-    setMusicError('');
-    setIsGrouping(true);
+  // Search only — does NOT touch the Denon or join any group. That only
+  // happens when the person actually clicks a result to play it.
+  async function runSearch() {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setSearchError('');
+    setSearchResults([]);
     try {
-      const result = await api('/recroom/speakers/group-search', 'POST', {
-        query: musicQuery.trim(),
-        members: selectedMembers(),
+      const result = await api('/recroom/speakers/search', 'POST', {
+        query: searchQuery.trim(),
       });
-      setLastPlayed(result?.played || musicQuery.trim());
-      flash(`Playing: ${musicQuery.trim()}`);
-      setMusicQuery('');
-      setTimeout(refreshNowPlaying, 1500);
+      const results = result?.results || [];
+      setSearchResults(results);
+      if (!results.length) setSearchError('No results found.');
     } catch (err) {
-      setMusicError(err.message);
-      flash('Music: error — see details below');
+      setSearchError(err.message);
     } finally {
-      setIsGrouping(false);
+      setIsSearching(false);
     }
   }
 
-  async function playLikedMusic() {
+  function handleSearchKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runSearch();
+    }
+  }
+
+  async function playResult(item) {
     setMusicError('');
     setIsGrouping(true);
     try {
-      await api('/recroom/speakers/group-favorites', 'POST', { members: selectedMembers() });
-      setLastPlayed('Liked Music (YouTube Music)');
-      flash('Playing Liked Music');
+      await api('/recroom/speakers/group-play-item', 'POST', {
+        uri: item.uri,
+        mediaType: item.type,
+        members: selectedMembers(),
+      });
+      setLastPlayed(item.name);
+      flash(`Playing: ${item.name}`);
       setTimeout(refreshNowPlaying, 1500);
     } catch (err) {
       setMusicError(err.message);
@@ -149,19 +168,21 @@ export default function WholeHomeAudio() {
     }
   }
 
+  async function transport(action) {
+    try {
+      await api('/recroom/speakers/transport', 'POST', { action });
+      setTimeout(refreshNowPlaying, 500);
+    } catch (err) {
+      flash(`Error: ${err.message}`);
+    }
+  }
+
   async function denonBass(db) {
     try {
       await api('/denon/bass', 'POST', { db });
       flash(`Bass: ${db > 0 ? '+' : ''}${db} dB`);
     } catch (err) {
       flash(`Error: ${err.message}`);
-    }
-  }
-
-  function handleMusicKeyDown(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      playSearch();
     }
   }
 
@@ -220,7 +241,7 @@ export default function WholeHomeAudio() {
       </div>
 
       <div className={styles.body}>
-        {/* LEFT: art, now playing, transport, speakers */}
+        {/* LEFT: art, now playing, transport, bass, speakers */}
         <div className={styles.left}>
           <div className={styles.artBox}>
             {hasArt ? (
@@ -237,9 +258,18 @@ export default function WholeHomeAudio() {
           <div className={styles.nowPlayingTitle}>{mediaTitle || 'Nothing playing'}</div>
           {mediaArtist && <div className={styles.nowPlayingArtist}>{mediaArtist}</div>}
 
-          <button className={`${styles.btn} ${styles.stopBtn}`} onClick={stopAudio} disabled={!isPlaying}>
-            ■ Stop
-          </button>
+          <div className={styles.transportRow}>
+            <button className={styles.transportBtn} onClick={() => transport('previous')} title="Previous">⏮</button>
+            <button
+              className={`${styles.transportBtn} ${styles.transportBtnPrimary}`}
+              onClick={() => transport(isPlaying ? 'pause' : 'play')}
+              title={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button className={styles.transportBtn} onClick={() => transport('next')} title="Next">⏭</button>
+            <button className={styles.transportBtn} onClick={stopAudio} disabled={!isPlaying} title="Stop">■</button>
+          </div>
 
           <BassSlider id="wha-bass" onChange={denonBass} />
 
@@ -260,7 +290,7 @@ export default function WholeHomeAudio() {
           </div>
         </div>
 
-        {/* RIGHT: search, liked music, playlists */}
+        {/* RIGHT: search + results, synced playlists */}
         <div className={styles.right}>
           <section className={styles.card}>
             <h3>Search &amp; Play</h3>
@@ -268,19 +298,37 @@ export default function WholeHomeAudio() {
               <input
                 type="text"
                 className={styles.musicInput}
-                placeholder="Search a song or artist…"
-                value={musicQuery}
-                onChange={(e) => setMusicQuery(e.target.value)}
-                onKeyDown={handleMusicKeyDown}
-                disabled={isGrouping}
+                placeholder="Search a song, album, or playlist…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                disabled={isSearching}
               />
-              <button className={styles.btn} onClick={playSearch} disabled={isGrouping || !musicQuery.trim()}>
-                {isGrouping ? 'Working…' : 'Search & Play'}
+              <button className={styles.btn} onClick={runSearch} disabled={isSearching || !searchQuery.trim()}>
+                {isSearching ? 'Searching…' : 'Search'}
               </button>
             </div>
-            <button className={styles.btn} onClick={playLikedMusic} disabled={isGrouping}>
-              {isGrouping ? 'Working…' : '▶ Play Liked Music'}
-            </button>
+
+            {searchError && <div className={styles.musicErrorBox}>{searchError}</div>}
+
+            {!!searchResults.length && (
+              <div className={styles.resultsList}>
+                {searchResults.map((r) => (
+                  <button
+                    key={r.uri}
+                    className={styles.resultRow}
+                    onClick={() => playResult(r)}
+                    disabled={isGrouping}
+                  >
+                    <span className={styles.resultText}>
+                      <span className={styles.resultName}>{r.name}</span>
+                      {r.subtitle && <span className={styles.resultSubtitle}>{r.subtitle}</span>}
+                    </span>
+                    <span className={styles.resultType}>{TYPE_LABEL[r.type] || r.type}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
 
           <section className={styles.card}>
