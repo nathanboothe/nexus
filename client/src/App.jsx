@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EntertainmentSystem from './modules/EntertainmentSystem.jsx';
 import TvReceiver from './modules/TvReceiver.jsx';
 import WholeHomeAudio from './modules/WholeHomeAudio.jsx';
@@ -65,6 +65,25 @@ const TABS = [
 export default function App() {
   const [tab, setTab] = useState('entertainment');
   const Active = TABS.find((t) => t.id === tab)?.Component;
+
+  // Haptic feedback: buzz the tablet briefly on every button press, app-wide.
+  // Event delegation on document covers every module (including future ones)
+  // without wiring an onClick handler individually into each button.
+  // Requires: a device with a vibration motor, a Chromium-based browser
+  // (Fully Kiosk Browser included — it's Android WebView under the hood),
+  // and a prior user gesture (the click itself satisfies that). Some browsers
+  // also gate the Vibration API behind a secure (HTTPS) context — since the
+  // dashboard is currently served over plain HTTP, that's the first thing to
+  // check if this doesn't buzz on the tablet.
+  useEffect(() => {
+    function handleClick(e) {
+      if (navigator.vibrate && e.target.closest('button')) {
+        navigator.vibrate(15);
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
 
   return (
     <div className={styles.app}>
